@@ -11,7 +11,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
-    page_title="Scion-Black // AI Agent & Attack Simulation", 
+    page_title="Scion-Black // AI Agent & Attack", 
     page_icon="🛡️", 
     layout="wide"
 )
@@ -114,7 +114,6 @@ if not st.session_state["logged_in"]:
                     st.error("Zugriff verweigert: Ungültige Anmeldedaten.")
 
     st.title("🛡️ Scion-Black Security Dashboard")
-    st.markdown("### KI-gestützte Webseiten-Analyse & Angriffssimulation")
     st.markdown("---")
     st.info("ℹ️ **Hinweis:** Bitte melden Sie sich über die linke Seitenleiste an, um fortzufahren.")
     
@@ -124,7 +123,7 @@ if not st.session_state["logged_in"]:
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT & ANGRIFFSSIMULATION ---
+    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT  ---
     with st.sidebar:
         st.markdown("### ⚙️ Steuerung")
         st.markdown("Status: **KI-Agent Bereit**")
