@@ -1,6 +1,13 @@
+import os
 import requests
 import streamlit as st
 from playwright.sync_api import sync_playwright
+import dns.resolver
+
+# Für den professionellen PDF-Export
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
@@ -59,6 +66,30 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Hilfsfunktion zur PDF-Generierung
+def generate_pdf_report(target, results_text):
+    filename = "scion_black_security_report.pdf"
+    doc = SimpleDocTemplate(filename, pagesize=letter)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'ReportTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors_hex := '#1f2937'
+    )
+    
+    story.append(Paragraph("🛡️ Scion-Black Security Audit Report", title_style))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(f"<b>Ziel-URL:</b> {target}", styles['Normal']))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("<b>Zusammenfassung der Analyseergebnisse:</b>", styles['Heading2']))
+    story.append(Paragraph(results_text.replace('\n', '<br/>'), styles['Normal']))
+    
+    doc.build(story)
+    return filename
+
 # Session State für Login
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
@@ -103,10 +134,9 @@ else:
             st.rerun()
 
     st.title("🛡️ Scion-Black Autonomous Agent")
-    st.markdown("Autonome Sicherheits-Audits und Simulation von Hacker-Angriffen ohne vorherige Credentials.")
+    st.markdown("Autonome Sicherheits-Audits, DNS-Aufklärung und Simulation von Hacker-Angriffen.")
     st.markdown("---")
 
-    # Auswahl des Modus (Ohne Credential-Abfrage bei der Simulation)
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
         "🤖 KI-Agent (Seitenanalyse & Cookies)",
@@ -115,7 +145,6 @@ else:
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
-    # Zugangsdaten werden nur noch angezeigt, wenn der reine Agenten-Login-Test gewählt ist
     agent_user = ""
     agent_pass = ""
     if "KI-Agent (" in modem:
@@ -132,10 +161,13 @@ else:
         else:
             with st.spinner("KI-Agent führt Operation aus..."):
                 try:
+                    report_summary = ""
+                    
                     if "Standard" in modem:
                         response = requests.get(target_url, timeout=5)
                         headers = response.headers
                         st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
+                        report_summary = f"Standard Header-Scan erfolgreich. Status-Code: {response.status_code}"
                         st.info("Nutze den Agenten- oder Simulationsmodus für erweiterte Abläufe.")
                         
                     elif "KI-Agent" in modem:
@@ -161,20 +193,31 @@ else:
                             
                             cookies = page.context.cookies()
                             st.markdown(f"🍪 **Gefundene Cookies:** {len(cookies)}")
+                            cookie_text = []
                             for cookie in cookies:
-                                st.write(f"- `{cookie['name']}` (Secure: {cookie.get('secure')}, HttpOnly: {cookie.get('httpOnly')})")
+                                c_info = f"- {cookie['name']} (Secure: {cookie.get('secure')}, HttpOnly: {cookie.get('httpOnly')})"
+                                st.write(c_info)
+                                cookie_text.append(c_info)
                             browser.close()
+                            report_summary = f"KI-Agent Analyse durchgeführt. Gefundene Cookies: {len(cookies)}"
 
                     else:
-                        # --- BLACK-BOX RED TEAMING: HACKER-ANGRIFFSSIMULATION OHNE CREDENTIALS ---
-                        st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation (ohne bekannte Zugangsdaten)...**")
+                        # --- BLACK-BOX RED TEAMING MIT DNS-AUFKLÄRUNG ---
+                        st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation & DNS-Aufklärung...**")
                         
-                        # Schritt 1: Reconnaissance & Exposure Analysis
+                        # Zusatz-Tool: DNS Auflösung
+                        try:
+                            clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
+                            answers = dns.resolver.resolve(clean_domain, 'A')
+                            ip_list = [ip.address for ip in answers]
+                            st.success(f"🌐 **DNS-Aufklärung erfolgreich:** Die Domain `{clean_domain}` löst auf die IP-Adressen auf: {', '.join(ip_list)}")
+                        except Exception as dns_err:
+                            st.info(f"ℹ️ DNS-Abfrage Hinweis: {dns_err}")
+
                         st.markdown("### 1️⃣ Phase: Externe Aufklärung & Angriffsvektoren")
                         response = requests.get(target_url, timeout=5)
                         st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Analysiere Angriffsfläche...")
                         
-                        # Schritt 2: Simulation von ungeauthntifizierten Angriffen
                         st.markdown("### 2️⃣ Phase: Simulation von Außenangriffen (Externer Eindringversuch)")
                         
                         simulated_attacks = [
@@ -187,14 +230,12 @@ else:
                         for attack_name, desc in simulated_attacks:
                             st.warning(f"⚠️ **Vektoren-Test: {attack_name}**\n* *Angriffsansatz:* {desc}\n* *Status:* Analysiert. System zeigt typische Einstiegspunkte für unautorisierte Angreifer.")
 
-                        # Schritt 3: Browser-gestützte Erkundung der öffentlich zugänglichen Oberfläche
                         st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
                         with sync_playwright() as p:
                             browser = p.chromium.launch(headless=True)
                             page = browser.new_page()
                             page.goto(target_url, timeout=10000)
                             
-                            # Prüfen, ob Login-Formulare frei zugänglich sind (Brute-Force Risiko)
                             login_fields = page.locator("input[type='password']").count()
                             if login_fields > 0:
                                 st.warning(f"🚨 **Schwachstellen-Hinweis:** Der Agent hat {login_fields} ungeschützte Passworteingabe(n) auf der öffentlichen Startseite gefunden. Ein Angreifer könnte hier automatisiert Bot-Logins (Credential Stuffing) versuchen.")
@@ -206,7 +247,18 @@ else:
                             st.image(screenshot_path, caption="Sicht des externen Angreifers auf die Startseite")
                             browser.close()
 
-                        st.success("🏁 **Black-Box Simulation abgeschlossen.** Nutzen Sie diese Erkenntnisse, um die Web-Peripherie zu härten.")
+                        st.success("🏁 **Black-Box Simulation abgeschlossen.**")
+                        report_summary = "Black-Box Red Teaming Simulation erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
+
+                    # PDF Download Button anbieten
+                    pdf_file = generate_pdf_report(target_url, report_summary)
+                    with open(pdf_file, "rb") as f:
+                        st.download_button(
+                            label="📄 Sicherheits-Report als PDF herunterladen",
+                            data=f,
+                            file_name="Scion_Black_Audit_Report.pdf",
+                            mime="application/pdf"
+                        )
 
                 except Exception as e:
                     st.error(f"Fehler bei der Simulation: {e}")
