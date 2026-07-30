@@ -4,7 +4,7 @@ import streamlit as st
 # Titel der App im Browser
 st.set_page_config(page_title="Web Security Scanner", page_icon="🛡️", layout="centered")
 
-st.title("🛡️ Mini Web Security Scanner")
+st.title("🛡️ Scion-Black")
 st.write("Dieses Tool überprüft Webseiten auf grundlegende Sicherheits-Header, um Unternehmen bei der Absicherung zu helfen.")
 
 # Eingabefeld für die Ziel-URL
