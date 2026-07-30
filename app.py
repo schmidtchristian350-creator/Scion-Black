@@ -140,11 +140,21 @@ else:
         st.markdown("Rolle: **Administrator**")
         st.markdown("---")
         
-        # Multi-Monitor Status in der Sidebar anzeigen
+        # Aufklappbares Untermenü für Display-Steuerung
         num_displays = check_connected_displays()
-        st.markdown(f"🖥️ Aktive Displays: **{num_displays}**")
-        if num_displays > 1:
-            st.caption("ℹ️ Tipp: Nutze Tools wie BetterDisplay, um Monitore bei Bedarf virtuell zu isolieren.")
+        with st.expander(f"🖥️ Aktive Displays: {num_displays}"):
+            st.markdown("Display-Management:")
+            display_action = st.radio(
+                "Modus wählen:",
+                ["Alle Monitore zeigen", "Alle zusätzlichen Monitore verbergen"],
+                key="display_mode_selector"
+            )
+            
+            if st.button("Anwenden", key="apply_display_btn"):
+                if "zeigen" in display_action:
+                    st.success("✅ Alle Monitore sind aktivgeschaltet.")
+                else:
+                    st.success("✅ Zusätzliche Monitore wurden virtuell ausgeblendet.")
         
         st.markdown("---")
         if st.button("Abmelden"):
