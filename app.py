@@ -9,25 +9,37 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS FÜR SAUBERES, DUNKLES DESIGN ---
+# --- CSS FÜR PERFEKTE LESBARKEIT (Heller Text, klare Kontraste) ---
 st.markdown("""
     <style>
+    /* Globaler Text: Deutlich helleres Grau für exzellente Lesbarkeit */
     .stApp {
         background-color: #0e1117;
-        color: #e5e7eb;
+        color: #f3f4f6;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
+    
+    /* Alle normalen Texte, Labels und Radio-Buttons absolut klar lesbar machen */
+    p, label, .stRadio div, .stMarkdown, span {
+        color: #f3f4f6 !important;
+    }
+
+    /* Überschriften in reinem Weiß */
     h1, h2, h3 {
         color: #ffffff !important;
         font-weight: 600;
         letter-spacing: -0.5px;
     }
+
+    /* Input-Felder kontraststark und klar lesbar */
     .stTextInput input {
         background-color: #1f2937 !important;
         color: #ffffff !important;
-        border: 1px solid #374151 !important;
+        border: 1px solid #4b5563 !important;
         border-radius: 6px;
     }
+
+    /* Buttons im sauberen Tech-Look */
     .stButton button {
         background-color: #1f2937 !important;
         color: #ffffff !important;
@@ -36,15 +48,24 @@ st.markdown("""
         font-weight: 500;
         transition: all 0.2s ease;
     }
+    
     .stButton button:hover {
         background-color: #2563eb !important;
         color: #ffffff !important;
         border: 1px solid #2563eb !important;
     }
+
+    /* Sidebar / Login Bereich & dessen Textinhalte */
     [data-testid="stSidebar"] {
         background-color: #111827;
         border-right: 1px solid #1f2937;
     }
+    
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {
+        color: #f3f4f6 !important;
+    }
+
+    /* Infoboxen und Warnungen */
     .stAlert {
         background-color: #1f2937 !important;
         color: #f3f4f6 !important;
@@ -61,7 +82,7 @@ if "logged_in" not in st.session_state:
 if not st.session_state["logged_in"]:
     with st.sidebar:
         st.markdown("### 🔐 System-Login")
-        st.markdown("<p style='color: #9ca3af; font-size: 13px;'>Geschützter Administrationsbereich</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #d1d5db; font-size: 13px;'>Geschützter Administrationsbereich</p>", unsafe_allow_html=True)
         
         with st.form("login_form"):
             username_input = st.text_input("Benutzername")
