@@ -1,43 +1,43 @@
 import requests
 import streamlit as st
 
-# Konfiguration der Seite im edlen Dark-Mode (Anthrazit & Blau)
+# Konfiguration der Seite im edlen Dark-Mode (Anthrazit & optimierter Kontrast)
 st.set_page_config(
     page_title="Scion-Black // Security Audit", 
     page_icon="🛡️", 
     layout="wide"
 )
 
-# --- CSS FÜR SAUBERES, DUNKLES ANTHRAZIT-DESIGN ---
+# --- CSS FÜR SAUBERES, DUNKLES DESIGN MIT OPTIMALER LESBARKEIT ---
 st.markdown("""
     <style>
-    /* Globaler Dark Mode mit edlem Anthrazit-Hintergrund */
+    /* Globaler Dark Mode mit tiefem Anthrazit und exzellent lesbarem Text */
     .stApp {
-        background-color: #121619;
-        color: #d1d5db;
+        background-color: #0e1117;
+        color: #e5e7eb;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Klare, saubere Überschriften in hellem Grau/Weiß */
+    /* Klare, saubere Überschriften in hellem Weiß */
     h1, h2, h3 {
-        color: #f3f4f6 !important;
+        color: #ffffff !important;
         font-weight: 600;
         letter-spacing: -0.5px;
     }
 
-    /* Input-Felder dezent und modern */
+    /* Input-Felder kontraststark und klar lesbar */
     .stTextInput input {
-        background-color: #1b2227 !important;
-        color: #f3f4f6 !important;
-        border: 1px solid #2f3e46 !important;
+        background-color: #1f2937 !important;
+        color: #ffffff !important;
+        border: 1px solid #374151 !important;
         border-radius: 6px;
     }
 
-    /* Buttons im sauberen Tech-Blau / Dark Style */
+    /* Buttons im sauberen Tech-Look mit perfektem Kontrast */
     .stButton button {
         background-color: #1f2937 !important;
-        color: #f3f4f6 !important;
-        border: 1px solid #374151 !important;
+        color: #ffffff !important;
+        border: 1px solid #4b5563 !important;
         border-radius: 6px;
         font-weight: 500;
         transition: all 0.2s ease;
@@ -51,15 +51,15 @@ st.markdown("""
 
     /* Sidebar / Login Bereich */
     [data-testid="stSidebar"] {
-        background-color: #181f24;
-        border-right: 1px solid #273038;
+        background-color: #111827;
+        border-right: 1px solid #1f2937;
     }
 
-    /* Infoboxen und Warnungen harmonisch eingefügt */
+    /* Infoboxen und Warnungen mit hohem Kontrast für beste Lesbarkeit */
     .stAlert {
-        background-color: #1b2227 !important;
-        color: #d1d5db !important;
-        border: 1px solid #2f3e46 !important;
+        background-color: #1f2937 !important;
+        color: #f3f4f6 !important;
+        border: 1px solid #374151 !important;
     }
     </style>
 """, unsafe_allow_html=True)
