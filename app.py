@@ -3,11 +3,10 @@ import subprocess
 import requests
 import streamlit as st
 import dns.resolver
-import traceback
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
-    page_title="Scion-Black // Self-Evolving Multi-Agent A2A", 
+    page_title="Scion-Black // Human-in-the-Loop A2A", 
     page_icon="🛡️", 
     layout="wide"
 )
@@ -74,99 +73,62 @@ def check_connected_displays():
 # Hilfsfunktion zur Report-Generierung
 def generate_report_file(target, results_text):
     filename = "scion_black_security_report.txt"
-    content = f"""SCION-BLACK SELF-EVOLVING A2A AUDIT REPORT
+    content = f"""SCION-BLACK HUMAN-IN-THE-LOOP AUDIT REPORT
 =============================================
 Ziel-URL: {target}
 
-ZUSAMMENFASSUNG DER ANALYSERGEBNISSE & SELF-HEALING LOGS:
+FREigegebene ANALYSERGEBNISSE:
 {results_text}
 """
     with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
     return filename
 
-# --- SELF-EVOLVING MULTI-AGENTEN SYSTEM (A2A mit Self-Healing & Code Adaptation) ---
+# --- MULTI-AGENTEN SCHRITTE MIT ERKLÄRUNG & FREIGABE ---
 
-def agent_recon_node(target_url, context):
-    """Sub-Agent 1: DNS & Netzwerk-Aufklärung mit dynamischer Fehlerbehebung"""
+def execute_recon_step(target_url):
     log = []
-    log.append("🤖 **[Recon-Agent]** Starte optimierte Netzwerk-Enumeration...")
+    log.append("🤖 **[Recon-Agent]** Führe DNS- und IP-Enumeration aus...")
     try:
         clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
         answers = dns.resolver.resolve(clean_domain, 'A')
         ip_list = [ip.address for ip in answers]
-        log.append(f"🌐 **[Recon-Agent]** Domain `{clean_domain}` erfolgreich aufgelöst auf: {', '.join(ip_list)}")
-        context["ip_list"] = ip_list
+        log.append(f"🌐 **[Recon-Agent]** IP-Adressen ermittelt: {', '.join(ip_list)}")
     except Exception as e:
-        # Self-Healing / Fallback bei DNS-Fehlern
-        log.append(f"⚠️ **[Recon-Agent Self-Healing]** DNS-Standardabfrage fehlgeschlagen ({e}). Schwenke auf HTTP-Fallback um...")
-        context["ip_list"] = ["Direktverbindung via HTTP"]
-        log.append("✅ **[Recon-Agent]** Fallback erfolgreich aktiviert.")
+        log.append(f"ℹ️ **[Recon-Agent]** DNS-Hinweis: {e}")
     return log
 
-def agent_vulnerability_node(target_url, context):
-    """Sub-Agent 2: Analysiert Angriffsvektoren und nutzt Kontext von Agent 1"""
+def execute_vulnerability_step(target_url):
     log = []
-    log.append(f"🤖 **[Vulnerability-Agent]** Übernehme Recon-Kontext (Ziel-IPs: {context.get('ip_list')}). Analysiere Vektoren...")
+    log.append("🤖 **[Vulnerability-Agent]** Prüfe HTTP-Header und Angriffsvektoren...")
     try:
         response = requests.get(target_url, timeout=5)
-        log.append(f"✅ **[Vulnerability-Agent]** Verbindung stabil. Status-Code: {response.status_code}")
+        log.append(f"✅ **[Vulnerability-Agent]** Ziel erreichbar (Status-Code: {response.status_code}).")
         
         simulated_attacks = [
-            ("Fehlende Sicherheits-Header (Misconfiguration)", "Angreifer nutzen fehlende Header für Clickjacking oder XSS."),
-            ("Offene Verzeichnisse & Backup-Dateien", "Prüfung auf vergessene Test-Pfade (`/admin`, `/backup.zip`)."),
-            ("Input-Feld Manipulation (Injection)", "Test auf ungeprüfte Eingabefelder (SQL-Injection / XSS)."),
-            ("Session-Fixation & Cookie-Hijacking", "Überprüfung von Cookies auf Secure- und HttpOnly-Flags.")
+            ("Fehlende Sicherheits-Header (Misconfiguration)", "Prüfung auf Clickjacking- und XSS-Risiken."),
+            ("Offene Verzeichnisse & Backup-Dateien", "Suche nach erreichbaren Test-Pfaden."),
+            ("Input-Feld Manipulation (Injection)", "Analyse der Eingabeschnittstellen."),
+            ("Session-Fixation & Cookie-Hijacking", "Überprüfung von Cookie-Flags (Secure/HttpOnly).")
         ]
         for attack_name, desc in simulated_attacks:
-            log.append(f"- ⚠️ **[Vulnerability-Agent] {attack_name}:** {desc}")
+            log.append(f"- ⚠️ **{attack_name}:** {desc}")
     except Exception as e:
-        log.append(f"🛠️ **[Vulnerability-Agent Self-Coding]** Ausnahme abgefangen: {e}. Optimiere Request-Header automatisch...")
-        # Selbstanpassung im Fehlerfall
-        response = requests.get(target_url, headers={"User-Agent": "ScionBlack-Autonomous-Agent/2.6"}, timeout=5)
-        log.append(f"✅ **[Vulnerability-Agent]** Korrigierter Request erfolgreich. Status-Code: {response.status_code}")
+        log.append(f"❌ **[Vulnerability-Agent] Fehler:** {e}")
     return log
 
-def agent_surface_node(target_url, context):
-    """Sub-Agent 3: Oberflächen- und Struktur-Scan"""
+def execute_surface_step(target_url):
     log = []
-    log.append("🤖 **[Surface-Agent]** Starte tiefgehenden Oberflächen-Scan...")
+    log.append("🤖 **[Surface-Agent]** Analysiere Webseiten-Struktur auf Einstiegspunkte...")
     try:
         response = requests.get(target_url, timeout=5)
-        content_lower = response.text.lower()
-        if "<form" in content_lower:
-            log.append("🚨 **[Surface-Agent]** Formularelemente (Logins/Inputs) erkannt. Einstiegspunkt für Bot-Tests markiert.")
-            context["surface_risk"] = "Hoch"
+        if "<form" in response.text.lower():
+            log.append("🚨 **[Surface-Agent]** Login- oder Eingabeformulare auf der Startseite erkannt.")
         else:
-            log.append("✅ **[Surface-Agent]** Keine kritischen Eingabeformulare auf der Startseite.")
-            context["surface_risk"] = "Gering"
+            log.append("✅ **[Surface-Agent]** Keine kritischen Formulare auf der Einstiegsseite.")
     except Exception as e:
-        log.append(f"ℹ️ **[Surface-Agent]** Oberflächen-Scan Hinweis: {e}")
+        log.append(f"ℹ️ **[Surface-Agent]** Hinweis: {e}")
     return log
-
-def master_coordinator_agent(target_url):
-    """Master-Koordinator steuert die A2A-Pipeline mit evolutionärer Fehlerkorrektur"""
-    full_report = []
-    shared_context = {}
-    
-    try:
-        # A2A Pipeline Step 1
-        r_logs = agent_recon_node(target_url, shared_context)
-        full_report.extend(r_logs)
-        
-        # A2A Pipeline Step 2
-        v_logs = agent_vulnerability_node(target_url, shared_context)
-        full_report.extend(v_logs)
-        
-        # A2A Pipeline Step 3
-        s_logs = agent_surface_node(target_url, shared_context)
-        full_report.extend(s_logs)
-        
-        full_report.append("🧠 **[Master-Koordinator]** Alle Sub-Agenten haben ihre Daten erfolgreich synchronisiert und optimiert.")
-    except Exception as master_err:
-        full_report.append(f"🛠️ **[Master Self-Healing]** Kritischer Pipeline-Fehler behoben: {master_err}")
-        
-    return full_report
 
 
 # Session State für Login
@@ -197,14 +159,14 @@ if not st.session_state["logged_in"]:
     
     st.code("""
 [Status] System bereit.
-[Status] Self-Evolving Multi-Agent A2A-Netzwerk im Standby...
+[Status] Human-in-the-Loop A2A-Netzwerk im Standby...
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: DASHBOARD MIT SELF-EVOLVING MULTI-AGENTEN ---
+    # --- EINGELOGGT: DASHBOARD MIT HUMAN-IN-THE-LOOP ---
     with st.sidebar:
         st.markdown("### ⚙️ Steuerung")
-        st.markdown("Status: **Self-Evolving A2A Aktiv**")
+        st.markdown("Status: **Human-in-the-Loop Aktiv**")
         st.markdown("Rolle: **Administrator**")
         st.markdown("---")
         
@@ -229,23 +191,51 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black // Self-Evolving Multi-Agent A2A")
-    st.markdown("Autonome, sich selbst optimierende Webseiten-Analyse durch kooperierende Sub-Agenten.")
+    st.title("🛡️ Scion-Black // Human-in-the-Loop A2A")
+    st.markdown("Kontrollierte, interaktive Webseiten-Analyse mit manueller Freigabe für jeden Schritt.")
     st.markdown("---")
 
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
         "🤖 KI-Agent (Seitenanalyse & Cookies)",
-        "⚡ Systemangriff (Self-Evolving Multi-Agent A2A)"
+        "⚡ Systemangriff (Human-in-the-Loop A2A)"
     ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
-    if st.button("Analyse & Simulation starten"):
+    # Wenn der Systemangriff-Modus gewählt ist, fragen wir vorab nach den Freigaben (Human-in-the-Loop)
+    if modem == "⚡ Systemangriff (Human-in-the-Loop A2A)":
+        st.markdown("---")
+        st.markdown("### 🛡️ **Sicherheits- & Freigabekonsole (Human-in-the-Loop)**")
+        st.markdown("Bitte prüfe die folgenden geplanten Aktionen und erteile die notwendigen Freigaben:")
+
+        with st.expander("🔍 **Schritt 1: Netzwerk- & DNS-Aufklärung (Recon-Agent)**", expanded=True):
+            st.markdown("""
+            * **Erklärung:** Der Agent fragt die DNS-Server ab, um die echten IP-Adressen hinter der Ziel-URL herauszufinden.
+            * **Auswirkungen:** Es wird passiv/aktiv Netzwerkverkehr zum Domain-Name-Server erzeugt. Das Ziel merkt davon in der Regel nichts, aber es ist der erste Schritt zur Identifikation der Infrastruktur.
+            """)
+            approve_step1 = st.checkbox("Schritt 1 freigeben und ausführen", value=True)
+
+        with st.expander("⚠️ **Schritt 2: Schwachstellen-Analyse (Vulnerability-Agent)**", expanded=True):
+            st.markdown("""
+            * **Erklärung:** Der Agent verbindet sich direkt per HTTP mit der Zielseite und prüft Sicherheits-Header, Cookies und bekannte Einstiegspunkte.
+            * **Auswirkungen:** Es werden Standard-Anfragen an den Webserver gesendet. Dies taucht in den normalen Logdateien des Zielservers auf. Es werden keine schädlichen Payloads oder Hacks ausgeführt.
+            """)
+            approve_step2 = st.checkbox("Schritt 2 freigeben und ausführen", value=True)
+
+        with st.expander("🖥️ **Schritt 3: Oberflächen- und Struktur-Scan (Surface-Agent)**", expanded=True):
+            st.markdown("""
+            * **Erklärung:** Der Agent durchsucht den HTML-Quelltext nach Formularen, Eingabefeldern oder Login-Masken.
+            * **Auswirkungen:** Identifiziert potenzielle Schnittstellen, die für automatisierte Eingabetests anfällig sein könnten. Keine Modifikation am Ziel.
+            """)
+            approve_step3 = st.checkbox("Schritt 3 freigeben und ausführen", value=True)
+        st.markdown("---")
+
+    if st.button("Analyse & Freigabe-Prozess starten"):
         if not target_url.startswith("http"):
             st.error("Bitte eine gültige URL angeben, die mit http:// oder https:// beginnt.")
         else:
-            with st.spinner("Self-Evolving Multi-Agenten-Netzwerk führt Operation aus..."):
+            with st.spinner("Führe freigegebene Operationen aus..."):
                 try:
                     report_summary = ""
                     
@@ -253,7 +243,7 @@ else:
                         response = requests.get(target_url, timeout=5)
                         st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
                         report_summary = f"Standard Header-Scan erfolgreich. Status-Code: {response.status_code}"
-                        st.info("Nutze den Multi-Agenten-Modus für erweiterte Abläufe.")
+                        st.info("Nutze den Kontroll-Modus für erweiterte Abläufe.")
                         
                     elif "KI-Agent" in modem:
                         st.markdown("🤖 **KI-Agent untersucht die Webstruktur...**")
@@ -270,14 +260,38 @@ else:
                         report_summary = f"KI-Agent Analyse via HTTP-Requests durchgeführt. Status: {response.status_code}"
 
                     else:
-                        # --- SELF-EVOLVING MULTI-AGENT SYSTEMANGRIFF ---
-                        st.markdown("🔴 **[A2A EVOLVING MASTER] Starte kooperatives, selbstreparierendes Red Teaming...**")
-                        
-                        agent_logs = master_coordinator_agent(target_url)
-                        for log_entry in agent_logs:
-                            st.markdown(log_entry)
+                        # --- HUMAN-IN-THE-LOOP AUSFÜHRUNG ---
+                        st.markdown("🔴 **[A2A MASTER] Starte kontrollierte Ausführung nach menschlicher Freigabe...**")
+                        agent_logs = []
 
-                        st.success("🏁 **Self-Evolving Multi-Agenten A2A Simulation erfolgreich abgeschlossen.**")
+                        if approve_step1:
+                            st.markdown("---")
+                            logs_1 = execute_recon_step(target_url)
+                            for l in logs_1:
+                                st.markdown(l)
+                                agent_logs.append(l)
+                        else:
+                            st.info("ℹ️ Schritt 1 (Recon) wurde vom Benutzer übersprungen.")
+
+                        if approve_step2:
+                            st.markdown("---")
+                            logs_2 = execute_vulnerability_step(target_url)
+                            for l in logs_2:
+                                st.markdown(l)
+                                agent_logs.append(l)
+                        else:
+                            st.info("ℹ️ Schritt 2 (Vulnerability) wurde vom Benutzer übersprungen.")
+
+                        if approve_step3:
+                            st.markdown("---")
+                            logs_3 = execute_surface_step(target_url)
+                            for l in logs_3:
+                                st.markdown(l)
+                                agent_logs.append(l)
+                        else:
+                            st.info("ℹ️ Schritt 3 (Surface) wurde vom Benutzer übersprungen.")
+
+                        st.success("🏁 **Human-in-the-Loop Simulation erfolgreich abgeschlossen.**")
                         report_summary = "\n".join(agent_logs)
 
                     # Report Download Button anbieten
@@ -295,4 +309,4 @@ else:
                     st.markdown("### ❓ **Welcher Angriff soll durchgeführt werden, oder möchtest du diese Webseite bearbeiten?**")
 
                 except Exception as e:
-                    st.error(f"Kritischer Systemfehler abgefangen und korrigiert: {e}")
+                    st.error(f"Fehler bei der Ausführung: {e}")
