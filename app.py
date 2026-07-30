@@ -1,5 +1,4 @@
 import os
-import subprocess
 import requests
 import streamlit as st
 from playwright.sync_api import sync_playwright
@@ -12,7 +11,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
-    page_title="Scion-Black // AI Agent & Attack", 
+    page_title="Scion-Black // AI Agent & Attack Simulation", 
     page_icon="🛡️", 
     layout="wide"
 )
@@ -67,16 +66,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Hilfsfunktion zur Prüfung des Monitor-Setups auf dem Mac
-def check_connected_displays():
-    try:
-        result = subprocess.run(["system_profiler", "SPDisplaysDataType"], capture_output=True, text=True)
-        display_count = result.stdout.count("Resolution")
-        return max(1, display_count)
-    except Exception:
-        return 1
-
-# Hilfsfunktion zur PDF-Generierung
+# Hilfsfunktion zur PDF-Generierung (Korrigiert)
 def generate_pdf_report(target, results_text):
     filename = "scion_black_security_report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=letter)
@@ -124,6 +114,7 @@ if not st.session_state["logged_in"]:
                     st.error("Zugriff verweigert: Ungültige Anmeldedaten.")
 
     st.title("🛡️ Scion-Black Security Dashboard")
+    st.markdown("### KI-gestützte Webseiten-Analyse & Angriffssimulation")
     st.markdown("---")
     st.info("ℹ️ **Hinweis:** Bitte melden Sie sich über die linke Seitenleiste an, um fortzufahren.")
     
@@ -133,31 +124,24 @@ if not st.session_state["logged_in"]:
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT ---
+    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT & ANGRIFFSSIMULATION ---
     with st.sidebar:
         st.markdown("### ⚙️ Steuerung")
         st.markdown("Status: **KI-Agent Bereit**")
         st.markdown("Rolle: **Administrator**")
         st.markdown("---")
-        
-        # Multi-Monitor Status in der Sidebar anzeigen
-        num_displays = check_connected_displays()
-        st.markdown(f"🖥️ Aktive Displays: **{num_displays}**")
-        if num_displays > 1:
-            st.caption("ℹ️ Tipp: Nutze Tools wie BetterDisplay, um Monitore bei Bedarf virtuell zu isolieren.")
-        
-        st.markdown("---")
         if st.button("Abmelden"):
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black")
+    st.title("🛡️ Scion-Black Autonomous Agent")
+    st.markdown("Autonome Sicherheits-Audits, DNS-Aufklärung und Simulation von Hacker-Angriffen.")
     st.markdown("---")
 
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
         "🤖 KI-Agent (Seitenanalyse & Cookies)",
-        "⚡ Systemangriff (Black-Box Red Teaming)"
+        "⚡ Vollständige Hacker-Angriffssimulation (Black-Box Red Teaming)"
     ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
@@ -219,8 +203,8 @@ else:
                             report_summary = f"KI-Agent Analyse durchgeführt. Gefundene Cookies: {len(cookies)}"
 
                     else:
-                        # --- SYSTEMANGRIFF MIT DNS-AUFKLÄRUNG ---
-                        st.markdown("🔴 **[RED TEAM] Starte Systemangriff & DNS-Aufklärung...**")
+                        # --- BLACK-BOX RED TEAMING MIT DNS-AUFKLÄRUNG ---
+                        st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation & DNS-Aufklärung...**")
                         
                         try:
                             clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
@@ -263,8 +247,8 @@ else:
                             st.image(screenshot_path, caption="Sicht des externen Angreifers auf die Startseite")
                             browser.close()
 
-                        st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
-                        report_summary = "Systemangriff (Black-Box Red Teaming) erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
+                        st.success("🏁 **Black-Box Simulation abgeschlossen.**")
+                        report_summary = "Black-Box Red Teaming Simulation erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
 
                     # PDF Download Button anbieten
                     pdf_file = generate_pdf_report(target_url, report_summary)
