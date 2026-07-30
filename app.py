@@ -2,7 +2,6 @@ import os
 import subprocess
 import requests
 import streamlit as st
-import dns.resolver
 
 # Für den professionellen PDF-Export
 from reportlab.lib.pagesizes import letter
@@ -200,24 +199,20 @@ else:
                         st.markdown("🤖 **KI-Agent untersucht die Webstruktur...**")
                         response = requests.get(target_url, timeout=5)
                         st.success(f"✅ Verbindung erfolgreich. Status-Code: {response.status_code}")
-                        st.markdown("🍪 **Cookie-Analyse über HTTP-Header simuliert (Sicherer Cloud-Modus)**")
+                        st.markdown("🍪 **Cookie-Analyse über HTTP-Header durchgeführt:**")
+                        cookie_count = 0
                         for header_name, header_val in response.headers.items():
                             if "set-cookie" in header_name.lower():
-                                st.markdown(- `{header_name}: {header_val}`")
+                                cookie_count += 1
+                                st.markdown(f"- `{header_name}: {header_val}`")
+                        if cookie_count == 0:
+                            st.markdown("- Keine direkten Set-Cookie Header in der Standardantwort gefunden.")
                         report_summary = f"KI-Agent Analyse via HTTP-Requests durchgeführt. Status: {response.status_code}"
 
                     else:
-                        # --- SYSTEMANGRIFF MIT DNS-AUFKLÄRUNG ---
-                        st.markdown("🔴 **[RED TEAM] Starte Systemangriff & DNS-Aufklärung...**")
+                        # --- SYSTEMANGRIFF ---
+                        st.markdown("🔴 **[RED TEAM] Starte Systemangriff & Aufklärung...**")
                         
-                        try:
-                            clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
-                            answers = dns.resolver.resolve(clean_domain, 'A')
-                            ip_list = [ip.address for ip in answers]
-                            st.success(f"🌐 **DNS-Aufklärung erfolgreich:** Die Domain `{clean_domain}` löst auf folgende IP-Adressen auf: {', '.join(ip_list)}")
-                        except Exception as dns_err:
-                            st.info(f"ℹ️ DNS-Abfrage Hinweis: {dns_err}")
-
                         st.markdown("### 1️⃣ Phase: Externe Aufklärung & Angriffsvektoren")
                         response = requests.get(target_url, timeout=5)
                         st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Angriffsfläche analysiert.")
@@ -234,7 +229,7 @@ else:
                         for attack_name, desc in simulated_attacks:
                             st.markdown(f"- ⚠️ **{attack_name}:** {desc}")
 
-                        st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
+                        st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan")
                         st.markdown("- ✅ HTTP-Strukturanalyse erfolgreich durchgeführt. Keine kritischen Exposes im Haupt-Markup erkannt.")
 
                         st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
