@@ -108,8 +108,8 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black Audit-Engine")
-    st.markdown("Überprüfung von Sicherheits-Headern zur Optimierung der Web-Infrastruktur.")
+    st.title("🛡️ Scion-Black")
+    st.markdown("Überprüfung und Optimierung der Web-Infrastruktur.")
     st.markdown("---")
 
     # Ziel-URL eingeben
