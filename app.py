@@ -214,35 +214,31 @@ else:
                                 except Exception as login_err:
                                     st.warning(f"⚠️ Automatisierter Login nicht möglich: {login_err}")
 
-                            screenshot_path = "agent_view.png"
-                            page.screenshot(path=screenshot_path)
-                            st.image(screenshot_path, caption="Live-Ansicht des Agenten")
-                            
                             cookies = page.context.cookies()
-                            st.markdown(f"🍪 **Gefundene Cookies:** {len(cookies)}")
+                            st.markdown(f"🍪 **Gefundene Cookies ({len(cookies)} Stück):**")
                             cookie_text = []
                             for cookie in cookies:
-                                c_info = f"- {cookie['name']} (Secure: {cookie.get('secure')}, HttpOnly: {cookie.get('httpOnly')})"
-                                st.write(c_info)
+                                c_info = f"- **{cookie['name']}** | Secure: {cookie.get('secure')} | HttpOnly: {cookie.get('httpOnly')}"
+                                st.markdown(c_info)
                                 cookie_text.append(c_info)
                             browser.close()
                             report_summary = f"KI-Agent Analyse durchgeführt. Gefundene Cookies: {len(cookies)}"
 
                     else:
-                        # --- SYSTEMANGRIFF MIT DNS-AUFKLÄRUNG ---
+                        # --- SYSTEMANGRIFF MIT DNS-AUFKLÄRUNG (Ohne Bilder, sauber aufgelistet) ---
                         st.markdown("🔴 **[RED TEAM] Starte Systemangriff & DNS-Aufklärung...**")
                         
                         try:
                             clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
                             answers = dns.resolver.resolve(clean_domain, 'A')
                             ip_list = [ip.address for ip in answers]
-                            st.success(f"🌐 **DNS-Aufklärung erfolgreich:** Die Domain `{clean_domain}` löst auf die IP-Adressen auf: {', '.join(ip_list)}")
+                            st.success(f"🌐 **DNS-Aufklärung erfolgreich:** Die Domain `{clean_domain}` löst auf folgende IP-Adressen auf: {', '.join(ip_list)}")
                         except Exception as dns_err:
                             st.info(f"ℹ️ DNS-Abfrage Hinweis: {dns_err}")
 
                         st.markdown("### 1️⃣ Phase: Externe Aufklärung & Angriffsvektoren")
                         response = requests.get(target_url, timeout=5)
-                        st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Analysiere Angriffsfläche...")
+                        st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Angriffsfläche analysiert.")
                         
                         st.markdown("### 2️⃣ Phase: Simulation von Außenangriffen (Externer Eindringversuch)")
                         
@@ -254,7 +250,7 @@ else:
                         ]
                         
                         for attack_name, desc in simulated_attacks:
-                            st.warning(f"⚠️ **Vektoren-Test: {attack_name}**\n* *Angriffsansatz:* {desc}\n* *Status:* Analysiert. System zeigt typische Einstiegspunkte für unautorisierte Angreifer.")
+                            st.markdown(f"- ⚠️ **{attack_name}:** {desc}")
 
                         st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
                         with sync_playwright() as p:
@@ -264,13 +260,9 @@ else:
                             
                             login_fields = page.locator("input[type='password']").count()
                             if login_fields > 0:
-                                st.warning(f"🚨 **Schwachstellen-Hinweis:** Der Agent hat {login_fields} ungeschützte Passworteingabe(n) auf der öffentlichen Startseite gefunden. Ein Angreifer könnte hier automatisiert Bot-Logins (Credential Stuffing) versuchen.")
+                                st.markdown(f"- 🚨 **Schwachstellen-Hinweis:** Es wurden {login_fields} Passworteingabe(n) auf der öffentlichen Startseite gefunden (Risiko für Credential Stuffing).")
                             else:
-                                st.success("✅ Keine direkten Passworteingaben auf der analysierten Einstiegsseite entdeckt.")
-
-                            screenshot_path = "red_team_view.png"
-                            page.screenshot(path=screenshot_path)
-                            st.image(screenshot_path, caption="Sicht des externen Angreifers auf die Startseite")
+                                st.markdown("- ✅ Keine direkten Passworteingaben auf der analysierten Einstiegsseite entdeckt.")
                             browser.close()
 
                         st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
@@ -285,6 +277,10 @@ else:
                             file_name="Scion_Black_Audit_Report.pdf",
                             mime="application/pdf"
                         )
+
+                    # Gewünschte Abschlussfrage
+                    st.markdown("---")
+                    st.markdown("### ❓ **Welcher Angriff soll durchgeführt werden, oder möchtest du diese Webseite bearbeiten?**")
 
                 except Exception as e:
                     st.error(f"Fehler bei der Simulation: {e}")
