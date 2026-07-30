@@ -4,14 +4,9 @@ import requests
 import streamlit as st
 import dns.resolver
 
-# Für den professionellen PDF-Export
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
-    page_title="Scion-Black // AI Agent & Attack", 
+    page_title="Scion-Black // Multi-Agent A2A System", 
     page_icon="🛡️", 
     layout="wide"
 )
@@ -75,30 +70,88 @@ def check_connected_displays():
     except Exception:
         return 1
 
-# Hilfsfunktion zur PDF-Generierung
-def generate_pdf_report(target, results_text):
-    filename = "scion_black_security_report.pdf"
-    doc = SimpleDocTemplate(filename, pagesize=letter)
-    story = []
-    styles = getSampleStyleSheet()
-    
-    colors_hex = '#1f2937'
-    title_style = ParagraphStyle(
-        'ReportTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        textColor=colors_hex
-    )
-    
-    story.append(Paragraph("🛡️ Scion-Black Security Audit Report", title_style))
-    story.append(Spacer(1, 12))
-    story.append(Paragraph(f"<b>Ziel-URL:</b> {target}", styles['Normal']))
-    story.append(Spacer(1, 12))
-    story.append(Paragraph("<b>Zusammenfassung der Analyseergebnisse:</b>", styles['Heading2']))
-    story.append(Paragraph(results_text.replace('\n', '<br/>'), styles['Normal']))
-    
-    doc.build(story)
+# Hilfsfunktion zur Report-Generierung
+def generate_report_file(target, results_text):
+    filename = "scion_black_security_report.txt"
+    content = f"""SCION-BLACK MULTI-AGENT A2A AUDIT REPORT
+==========================================
+Ziel-URL: {target}
+
+ZUSAMMENFASSUNG DER ANALYSERGEBNISSE:
+{results_text}
+"""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
     return filename
+
+# --- MULTI-AGENTEN SYSTEM (A2A - Agent to Agent Kommunikation) ---
+
+def agent_recon_node(target_url):
+    """Sub-Agent 1: Zuständig für DNS- und Netzwerk-Aufklärung"""
+    log = []
+    log.append("🤖 **[Recon-Agent]** Starte Netzwerk- und DNS-Enumeration...")
+    try:
+        clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
+        answers = dns.resolver.resolve(clean_domain, 'A')
+        ip_list = [ip.address for ip in answers]
+        log.append(f"🌐 **[Recon-Agent]** Domain `{clean_domain}` aufgelöst auf IP(s): {', '.join(ip_list)}")
+    except Exception as e:
+        log.append(f"ℹ️ **[Recon-Agent]** DNS-Hinweis: {e}")
+    return log
+
+def agent_vulnerability_node(target_url):
+    """Sub-Agent 2: Prüft Header, Konfigurationen und Angriffsvektoren"""
+    log = []
+    log.append("🤖 **[Vulnerability-Agent]** Übernehme Daten von Recon-Agent. Analysiere Angriffsvektoren...")
+    try:
+        response = requests.get(target_url, timeout=5)
+        log.append(f"✅ **[Vulnerability-Agent]** Ziel erreichbar (Status-Code: {response.status_code}).")
+        
+        simulated_attacks = [
+            ("Fehlende Sicherheits-Header (Misconfiguration)", "Angreifer nutzen fehlende Header für Clickjacking oder XSS."),
+            ("Offene Verzeichnisse & Backup-Dateien", "Prüfung auf vergessene Test-Pfade (`/admin`, `/backup.zip`)."),
+            ("Input-Feld Manipulation (Injection)", "Test auf ungeprüfte Eingabefelder (SQL-Injection / XSS)."),
+            ("Session-Fixation & Cookie-Hijacking", "Überprüfung von Cookies auf Secure- und HttpOnly-Flags.")
+        ]
+        for attack_name, desc in simulated_attacks:
+            log.append(f"- ⚠️ **[Vulnerability-Agent] {attack_name}:** {desc}")
+    except Exception as e:
+        log.append(f"❌ **[Vulnerability-Agent] Fehler:** {e}")
+    return log
+
+def agent_surface_node(target_url):
+    """Sub-Agent 3: Scannt die Oberfläche und übergibt an den Master"""
+    log = []
+    log.append("🤖 **[Surface-Agent]** Analysiere Webseiten-Struktur und Formulare...")
+    try:
+        response = requests.get(target_url, timeout=5)
+        content_lower = response.text.lower()
+        if "<form" in content_lower:
+            log.append("🚨 **[Surface-Agent]** Formularelemente (Logins/Inputs) auf der Startseite erkannt.")
+        else:
+            log.append("✅ **[Surface-Agent]** Keine kritischen Formulare auf der Einstiegsseite entdeckt.")
+    except Exception as e:
+        log.append(f"ℹ️ **[Surface-Agent]** Oberflächen-Scan Hinweis: {e}")
+    return log
+
+def master_coordinator_agent(target_url):
+    """Master-Agent koordiniert die A2A-Pipeline"""
+    full_report = []
+    
+    # Übergabe an Agent 1
+    r_logs = agent_recon_node(target_url)
+    full_report.extend(r_logs)
+    
+    # Übergabe an Agent 2 (nutzt Ergebnisse/Ziel)
+    v_logs = agent_vulnerability_node(target_url)
+    full_report.extend(v_logs)
+    
+    # Übergabe an Agent 3
+    s_logs = agent_surface_node(target_url)
+    full_report.extend(s_logs)
+    
+    return full_report
+
 
 # Session State für Login
 if "logged_in" not in st.session_state:
@@ -128,14 +181,14 @@ if not st.session_state["logged_in"]:
     
     st.code("""
 [Status] System bereit.
-[Status] KI-Agent wartet auf Administrator-Freigabe...
+[Status] Multi-Agenten A2A-Netzwerk wartet auf Freigabe...
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT ---
+    # --- EINGELOGGT: DASHBOARD MIT MULTI-AGENTEN SYSTEM ---
     with st.sidebar:
         st.markdown("### ⚙️ Steuerung")
-        st.markdown("Status: **KI-Agent Bereit**")
+        st.markdown("Status: **Multi-Agent A2A Aktiv**")
         st.markdown("Rolle: **Administrator**")
         st.markdown("---")
         
@@ -160,41 +213,31 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black")
+    st.title("🛡️ Scion-Black // Multi-Agent A2A System")
+    st.markdown("Autonome Webseiten-Analyse durch kooperierende Sub-Agenten.")
     st.markdown("---")
 
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
         "🤖 KI-Agent (Seitenanalyse & Cookies)",
-        "⚡ Systemangriff (Black-Box Red Teaming)"
+        "⚡ Systemangriff (Multi-Agent A2A Red Teaming)"
     ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
-
-    agent_user = ""
-    agent_pass = ""
-    if "KI-Agent (" in modem:
-        st.markdown("#### 🤖 Optionale Zugangsdaten für Login-Tests")
-        col1, col2 = st.columns(2)
-        with col1:
-            agent_user = st.text_input("Benutzername / E-Mail (optional):")
-        with col2:
-            agent_pass = st.text_input("Passwort (optional):", type="password")
 
     if st.button("Analyse & Simulation starten"):
         if not target_url.startswith("http"):
             st.error("Bitte eine gültige URL angeben, die mit http:// oder https:// beginnt.")
         else:
-            with st.spinner("KI-Agent führt Operation aus..."):
+            with st.spinner("Multi-Agenten-Netzwerk (A2A) führt Operation aus..."):
                 try:
                     report_summary = ""
                     
                     if "Standard" in modem:
                         response = requests.get(target_url, timeout=5)
-                        headers = response.headers
                         st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
                         report_summary = f"Standard Header-Scan erfolgreich. Status-Code: {response.status_code}"
-                        st.info("Nutze den Agenten- oder Simulationsmodus für erweiterte Abläufe.")
+                        st.info("Nutze den Multi-Agenten-Modus für erweiterte Abläufe.")
                         
                     elif "KI-Agent" in modem:
                         st.markdown("🤖 **KI-Agent untersucht die Webstruktur...**")
@@ -211,47 +254,24 @@ else:
                         report_summary = f"KI-Agent Analyse via HTTP-Requests durchgeführt. Status: {response.status_code}"
 
                     else:
-                        # --- SYSTEMANGRIFF MIT DNS-AUFKLÄRUNG ---
-                        st.markdown("🔴 **[RED TEAM] Starte Systemangriff & DNS-Aufklärung...**")
+                        # --- MULTI-AGENT A2A SYSTEMANGRIFF ---
+                        st.markdown("🔴 **[A2A MASTER] Starte kooperativen Systemangriff...**")
                         
-                        try:
-                            clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
-                            answers = dns.resolver.resolve(clean_domain, 'A')
-                            ip_list = [ip.address for ip in answers]
-                            st.success(f"🌐 **DNS-Aufklärung erfolgreich:** Die Domain `{clean_domain}` löst auf folgende IP-Adressen auf: {', '.join(ip_list)}")
-                        except Exception as dns_err:
-                            st.info(f"ℹ️ DNS-Abfrage Hinweis: {dns_err}")
+                        agent_logs = master_coordinator_agent(target_url)
+                        for log_entry in agent_logs:
+                            st.markdown(log_entry)
 
-                        st.markdown("### 1️⃣ Phase: Externe Aufklärung & Angriffsvektoren")
-                        response = requests.get(target_url, timeout=5)
-                        st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Angriffsfläche analysiert.")
-                        
-                        st.markdown("### 2️⃣ Phase: Simulation von Außenangriffen (Externer Eindringversuch)")
-                        
-                        simulated_attacks = [
-                            ("Fehlende Sicherheits-Header (Misconfiguration)", "Angreifer nutzen fehlende Header aus, um Clickjacking oder Cross-Site Scripting (XSS) über die Startseite einzuschleusen."),
-                            ("Offene Verzeichnisse & Backup-Dateien", "Suche nach vergessenen Test-Pfaden, alten Konfigurationsdateien oder Admin-Panels (`/admin`, `/backup.zip`), die ohne Passwort erreichbar sind."),
-                            ("Input-Feld Manipulation (Injection)", "Testet, ob Suchfelder oder Kontaktformulare ungeprüfte Eingaben annehmen (SQL-Injection / XSS), um Daten auszulesen."),
-                            ("Session-Fixation & Cookie-Hijacking", "Prüft, ob Cookies vor der Authentifizierung ohne Secure- oder HttpOnly-Flag gesetzt werden.")
-                        ]
-                        
-                        for attack_name, desc in simulated_attacks:
-                            st.markdown(f"- ⚠️ **{attack_name}:** {desc}")
+                        st.success("🏁 **Multi-Agenten A2A Simulation erfolgreich abgeschlossen.**")
+                        report_summary = "\n".join(agent_logs)
 
-                        st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan")
-                        st.markdown("- ✅ HTTP-Strukturanalyse erfolgreich durchgeführt. Keine kritischen Exposes im Haupt-Markup erkannt.")
-
-                        st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
-                        report_summary = "Systemangriff (Black-Box Red Teaming) erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
-
-                    # PDF Download Button anbieten
-                    pdf_file = generate_pdf_report(target_url, report_summary)
-                    with open(pdf_file, "rb") as f:
+                    # Report Download Button anbieten
+                    report_file = generate_report_file(target_url, report_summary)
+                    with open(report_file, "rb") as f:
                         st.download_button(
-                            label="📄 Sicherheits-Report als PDF herunterladen",
+                            label="📄 Sicherheits-Report als Datei herunterladen",
                             data=f,
-                            file_name="Scion_Black_Audit_Report.pdf",
-                            mime="application/pdf"
+                            file_name="Scion_Black_Audit_Report.txt",
+                            mime="text/plain"
                         )
 
                     # Gewünschte Abschlussfrage
