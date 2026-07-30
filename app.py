@@ -117,8 +117,8 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black Autonomous Agent")
-    st.markdown("Erweiterter Sicherheits-Audit mit automatisierter Browser-Navigation und Login-Simulation.")
+    st.title("🛡️ Scion-Black")
+    st.markdown("Sicherheits-Audit mit automatisierter Browser-Navigation.")
     st.markdown("---")
 
     # Auswahl des Modus
