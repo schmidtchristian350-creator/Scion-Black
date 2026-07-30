@@ -133,8 +133,7 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black Autonomous Agent")
-    st.markdown("Autonome Sicherheits-Audits, DNS-Aufklärung und Simulation von Hacker-Angriffen.")
+    st.title("🛡️ Scion-Black")
     st.markdown("---")
 
     modem = st.radio("Wähle den Betriebsmodus:", [
@@ -226,7 +225,7 @@ else:
                             ("Session-Fixation & Cookie-Hijacking", "Prüft, ob Cookies vor der Authentifizierung ohne Secure- oder HttpOnly-Flag gesetzt werden.")
                         ]
                         
-                        for attack_name, desc in simulated_attacks:
+                        for attack_name, desc in attacks:
                             st.warning(f"⚠️ **Vektoren-Test: {attack_name}**\n* *Angriffsansatz:* {desc}\n* *Status:* Analysiert. System zeigt typische Einstiegspunkte für unautorisierte Angreifer.")
 
                         st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
