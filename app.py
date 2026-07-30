@@ -80,7 +80,7 @@ if not st.session_state["logged_in"]:
             submit_button = st.form_submit_button("Anmelden")
             
             if submit_button:
-                if username_input == "admin" and password_input == "scion2026":
+                if username_input == "Christian" and password_input == "scionblack2026!!!":
                     st.session_state["logged_in"] = True
                     st.rerun()
                 else:
@@ -90,7 +90,7 @@ if not st.session_state["logged_in"]:
     st.title("🛡️ Scion-Black Security Dashboard")
     st.markdown("### Professionelle Webseiten- und Header-Analyse")
     st.markdown("---")
-    st.info("ℹ️ **Hinweis:** Dieses Tool dient der strukturierten Sicherheitsüberprüfung von Webanwendungen. Bitte melden Sie sich über die linke Seitenleiste an, um fortzufahren.")
+    st.info("ℹ️ **Hinweis:** Bitte melden Sie sich über die linke Seitenleiste an, um fortzufahren.")
     
     st.code("""
 [Status] System bereit.
