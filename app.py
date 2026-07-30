@@ -1,4 +1,5 @@
 import os
+import subprocess
 import requests
 import streamlit as st
 from playwright.sync_api import sync_playwright
@@ -66,7 +67,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Hilfsfunktion zur PDF-Generierung (Korrigiert)
+# Hilfsfunktion zur Prüfung des Monitor-Setups auf dem Mac
+def check_connected_displays():
+    try:
+        result = subprocess.run(["system_profiler", "SPDisplaysDataType"], capture_output=True, text=True)
+        display_count = result.stdout.count("Resolution")
+        return max(1, display_count)
+    except Exception:
+        return 1
+
+# Hilfsfunktion zur PDF-Generierung
 def generate_pdf_report(target, results_text):
     filename = "scion_black_security_report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=letter)
@@ -123,11 +133,19 @@ if not st.session_state["logged_in"]:
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT  ---
+    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT ---
     with st.sidebar:
         st.markdown("### ⚙️ Steuerung")
         st.markdown("Status: **KI-Agent Bereit**")
         st.markdown("Rolle: **Administrator**")
+        st.markdown("---")
+        
+        # Multi-Monitor Status in der Sidebar anzeigen
+        num_displays = check_connected_displays()
+        st.markdown(f"🖥️ Aktive Displays: **{num_displays}**")
+        if num_displays > 1:
+            st.caption("ℹ️ Tipp: Nutze Tools wie BetterDisplay, um Monitore bei Bedarf virtuell zu isolieren.")
+        
         st.markdown("---")
         if st.button("Abmelden"):
             st.session_state["logged_in"] = False
@@ -225,7 +243,7 @@ else:
                             ("Session-Fixation & Cookie-Hijacking", "Prüft, ob Cookies vor der Authentifizierung ohne Secure- oder HttpOnly-Flag gesetzt werden.")
                         ]
                         
-                        for attack_name, desc in attacks:
+                        for attack_name, desc in simulated_attacks:
                             st.warning(f"⚠️ **Vektoren-Test: {attack_name}**\n* *Angriffsansatz:* {desc}\n* *Status:* Analysiert. System zeigt typische Einstiegspunkte für unautorisierte Angreifer.")
 
                         st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
