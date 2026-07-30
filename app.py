@@ -219,8 +219,7 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black // Human-in-the-Loop A2A")
-    st.markdown("Kontrollierte, interaktive Webseiten-Analyse mit manueller Freigabe für alle 4 Analyse-Bausteine.")
+    st.title("🛡️ Scion-Black // A2A")
     st.markdown("---")
 
     modem = st.radio("Wähle den Betriebsmodus:", [
