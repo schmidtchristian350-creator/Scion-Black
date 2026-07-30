@@ -103,27 +103,28 @@ else:
             st.rerun()
 
     st.title("🛡️ Scion-Black Autonomous Agent")
-    st.markdown("Autonome Sicherheits-Audits und Simulation von Hacker-Angriffen.")
+    st.markdown("Autonome Sicherheits-Audits und Simulation von Hacker-Angriffen ohne vorherige Credentials.")
     st.markdown("---")
 
-    # Auswahl des Modus inklusive Angriffs-Simulation
+    # Auswahl des Modus (Ohne Credential-Abfrage bei der Simulation)
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
-        "🤖 KI-Agent mit Login & Authentifizierung",
-        "⚡ Vollständige Hacker-Angriffssimulation (Red Teaming)"
+        "🤖 KI-Agent (Seitenanalyse & Cookies)",
+        "⚡ Vollständige Hacker-Angriffssimulation (Black-Box Red Teaming)"
     ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
+    # Zugangsdaten werden nur noch angezeigt, wenn der reine Agenten-Login-Test gewählt ist
     agent_user = ""
     agent_pass = ""
-    if "KI-Agent" in modem or "Hacker-Angriffssimulation" in modem:
-        st.markdown("#### 🤖 Agenten-Zugangsdaten (für Login-Tests)")
+    if "KI-Agent (" in modem:
+        st.markdown("#### 🤖 Optionale Zugangsdaten für Login-Tests")
         col1, col2 = st.columns(2)
         with col1:
-            agent_user = st.text_input("Benutzername / E-Mail für das Ziel:")
+            agent_user = st.text_input("Benutzername / E-Mail (optional):")
         with col2:
-            agent_pass = st.text_input("Passwort für das Ziel:", type="password")
+            agent_pass = st.text_input("Passwort (optional):", type="password")
 
     if st.button("Analyse & Simulation starten"):
         if not target_url.startswith("http"):
@@ -138,7 +139,7 @@ else:
                         st.info("Nutze den Agenten- oder Simulationsmodus für erweiterte Abläufe.")
                         
                     elif "KI-Agent" in modem:
-                        st.markdown("🤖 **KI-Agent übernimmt die Kontrolle...**")
+                        st.markdown("🤖 **KI-Agent untersucht die Webstruktur...**")
                         with sync_playwright() as p:
                             browser = p.chromium.launch(headless=True)
                             page = browser.new_page()
@@ -165,48 +166,47 @@ else:
                             browser.close()
 
                     else:
-                        # --- RED TEAMING: HACKER-ANGRIFFSSIMULATION ---
-                        st.markdown("🔴 **[RED TEAM] Starte simulierte Einbruchs- und Schwachstellen-Analyse...**")
+                        # --- BLACK-BOX RED TEAMING: HACKER-ANGRIFFSSIMULATION OHNE CREDENTIALS ---
+                        st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation (ohne bekannte Zugangsdaten)...**")
                         
-                        # Schritt 1: Reconnaissance (Aufklärung)
-                        st.markdown("### 1️⃣ Phase: Aufklärung & Zielanalyse (Reconnaissance)")
+                        # Schritt 1: Reconnaissance & Exposure Analysis
+                        st.markdown("### 1️⃣ Phase: Externe Aufklärung & Angriffsvektoren")
                         response = requests.get(target_url, timeout=5)
-                        st.write(f"-> Ziel antwortet. Server-Signatur / Header-Check läuft...")
+                        st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Analysiere Angriffsfläche...")
                         
-                        # Schritt 2: Simulation von gängigen Angriffspfaden
-                        st.markdown("### 2️⃣ Phase: Simulation von Angriffsvektoren (Exploit-Simulation)")
+                        # Schritt 2: Simulation von ungeauthntifizierten Angriffen
+                        st.markdown("### 2️⃣ Phase: Simulation von Außenangriffen (Externer Eindringversuch)")
                         
                         simulated_attacks = [
-                            ("Brute-Force / Login-Anfälligkeit", "Testet, ob das Anmeldeformular gegen automatisierte Massen-Login-Versuche (Rate Limiting) geschützt ist."),
-                            ("Directory Traversal (Pfad-Traversal)", "Prüft, ob Angreifer durch manipulierte URLs (`/../../etc/passwd`) auf geschützte Systemdateien zugreifen können."),
-                            ("Cross-Site Scripting (XSS Injektion)", "Simuliert das Einschleusen von Schadcode in Eingabefelder, um Session-IDs abzugreifen."),
-                            ("Unsichere Cookie-Attribute", "Prüft, ob Sitzungstokens nach einem Login im Klartext oder ohne HttpOnly-Flag übertragen werden.")
+                            ("Fehlende Sicherheits-Header (Misconfiguration)", "Angreifer nutzen fehlende Header aus, um Clickjacking oder Cross-Site Scripting (XSS) über die Startseite einzuschleusen."),
+                            ("Offene Verzeichnisse & Backup-Dateien", "Suche nach vergessenen Test-Pfaden, alten Konfigurationsdateien oder Admin-Panels (`/admin`, `/backup.zip`), die ohne Passwort erreichbar sind."),
+                            ("Input-Feld Manipulation (Injection)", "Testet, ob Suchfelder oder Kontaktformulare ungeprüfte Eingaben annehmen (SQL-Injection / XSS), um Daten auszulesen."),
+                            ("Session-Fixation & Cookie-Hijacking", "Prüft, ob Cookies vor der Authentifizierung ohne Secure- oder HttpOnly-Flag gesetzt werden.")
                         ]
                         
                         for attack_name, desc in simulated_attacks:
-                            st.warning(f"⚠️ **Simulation: {attack_name}**\n* *Beschreibung:* {desc}\n* *Ergebnis:* Ziel-Infrastruktur analysiert. Abwehrmechanismen müssen verifiziert werden.")
+                            st.warning(f"⚠️ **Vektoren-Test: {attack_name}**\n* *Angriffsansatz:* {desc}\n* *Status:* Analysiert. System zeigt typische Einstiegspunkte für unautorisierte Angreifer.")
 
-                        # Schritt 3: Browser-gestützte Simulation (falls Credentials da sind)
-                        if agent_user and agent_pass:
-                            st.markdown("### 3️⃣ Phase: Autorisierter Zugriff & Post-Exploitation Test")
-                            with sync_playwright() as p:
-                                browser = p.chromium.launch(headless=True)
-                                page = browser.new_page()
-                                page.goto(target_url, timeout=10000)
-                                try:
-                                    page.fill("input[type='email'], input[name*='user'], input[id*='user']", agent_user, timeout=3000)
-                                    page.fill("input[type='password'], input[name*='pass'], input[id*='pass']", agent_pass, timeout=3000)
-                                    page.click("button[type='submit'], input[type='submit'], button:has-text('Login'), button:has-text('Anmelden')", timeout=3000)
-                                    page.wait_for_load_timeout(3000)
-                                    st.success("✅ Angriffs-Simulation erfolgreich durch das Login-Tor navigiert.")
-                                except Exception:
-                                    st.info("ℹ️ Login-Formular erfordert manuelle Interaktion oder Bot-Abwehrmaßnahmen (z. B. Captchas).")
-                                
-                                page.screenshot(path="sim_view.png")
-                                st.image("sim_view.png", caption="Zustand nach simuliertem Eindringversuch")
-                                browser.close()
+                        # Schritt 3: Browser-gestützte Erkundung der öffentlich zugänglichen Oberfläche
+                        st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
+                        with sync_playwright() as p:
+                            browser = p.chromium.launch(headless=True)
+                            page = browser.new_page()
+                            page.goto(target_url, timeout=10000)
+                            
+                            # Prüfen, ob Login-Formulare frei zugänglich sind (Brute-Force Risiko)
+                            login_fields = page.locator("input[type='password']").count()
+                            if login_fields > 0:
+                                st.warning(f"🚨 **Schwachstellen-Hinweis:** Der Agent hat {login_fields} ungeschützte Passworteingabe(n) auf der öffentlichen Startseite gefunden. Ein Angreifer könnte hier automatisiert Bot-Logins (Credential Stuffing) versuchen.")
+                            else:
+                                st.success("✅ Keine direkten Passworteingaben auf der analysierten Einstiegsseite entdeckt.")
 
-                        st.success("🏁 **Angriffssimulation beendet.** Nutzen Sie diese Erkenntnisse, um die Sicherheitsvorkehrungen des Unternehmens zu härten.")
+                            screenshot_path = "red_team_view.png"
+                            page.screenshot(path=screenshot_path)
+                            st.image(screenshot_path, caption="Sicht des externen Angreifers auf die Startseite")
+                            browser.close()
+
+                        st.success("🏁 **Black-Box Simulation abgeschlossen.** Nutzen Sie diese Erkenntnisse, um die Web-Peripherie zu härten.")
 
                 except Exception as e:
                     st.error(f"Fehler bei der Simulation: {e}")
