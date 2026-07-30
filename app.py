@@ -109,7 +109,7 @@ else:
             st.rerun()
 
     st.title("🛡️ Scion-Black")
-    st.markdown("Überprüfung und Optimierung der Web-Infrastruktur.")
+    st.markdown("Überprüfung, Schwachstellen-Analyse und Angriffsvektoren der Web-Infrastruktur.")
     st.markdown("---")
 
     # Ziel-URL eingeben
@@ -126,29 +126,55 @@ else:
                     
                     st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
                     
+                    # Erweiterte Checks mit konkreten Erklärungen zu Angriffsvektoren
                     checks = {
-                        "Strict-Transport-Security": ("HSTS-Header", "Erzwingt verschlüsselte HTTPS-Verbindungen."),
-                        "X-Content-Type-Options": ("X-Content-Type-Options", "Verhindert MIME-Sniffing von Dateitypen."),
-                        "X-Frame-Options": ("X-Frame-Options", "Schützt vor Clickjacking (Einbetten in fremde Iframes)."),
-                        "Content-Security-Policy": ("Content-Security-Policy (CSP)", "Schützt vor Cross-Site Scripting (XSS)-Angriffen."),
-                        "Referrer-Policy": ("Referrer-Policy", "Kontrolliert die Weitergabe von URL-Informationen.")
+                        "Strict-Transport-Security": (
+                            "HSTS-Header", 
+                            "Erzwingt verschlüsselte HTTPS-Verbindungen.",
+                            "🔴 **Angriffsszenario (Man-in-the-Middle):** Fehlt dieser Header, können Angreifer im selben WLAN (z. B. Café oder Flughafen) unverschlüsselte Anfragen abfangen (SSL-Stripping), den Nutzer auf eine gefälschte HTTP-Seite umleiten und so Zugangsdaten oder Sitzungs-Cookies im Klartext abgreifen."
+                        ),
+                        "X-Content-Type-Options": (
+                            "X-Content-Type-Options", 
+                            "Verhindert MIME-Sniffing von Dateitypen.",
+                            "🔴 **Angriffsszenario (MIME-Sniffing / XSS):** Ohne diesen Header ignorieren Browser manchmal den echten Dateityp und interpretieren hochgeladene, harmlose Dateien (wie ein Profilbild) plötzlich als ausführbaren Programmcode (JavaScript), wodurch Angreifer Schadcode im Browser des Opfers ausführen können."
+                        ),
+                        "X-Frame-Options": (
+                            "X-Frame-Options", 
+                            "Schützt vor Clickjacking.",
+                            "🔴 **Angriffsszenario (Clickjacking):** Wenn dieser Header fehlt, kann ein Angreifer deine Webseite unsichtbar in einen Rahmen (Iframe) auf seiner eigenen bösartigen Website einbinden. Klickt der Nutzer dort auf scheinbare Gewinnspiel-Buttons, klickt er in Wirklichkeit auf deiner echten Seite (z. B. auf 'Konto löschen' oder 'Geld überweisen')."
+                        ),
+                        "Content-Security-Policy": (
+                            "Content-Security-Policy (CSP)", 
+                            "Schützt vor Cross-Site Scripting (XSS).",
+                            "🔴 **Angriffsszenario (Cross-Site Scripting / Data Theft):** Das Fehlen einer CSP ist eine schwere Lücke. Angreifer können über Kommentarfelder oder Formulare bösartigen JavaScript-Code einschleusen. Der Browser führt diesen aus, liest sensible Session-Tokens aus und schickt sie direkt an den Hacker, der sich daraufhin als der Nutzer einloggen kann."
+                        ),
+                        "Referrer-Policy": (
+                            "Referrer-Policy", 
+                            "Kontrolliert die Weitergabe von URL-Informationen.",
+                            "🔴 **Angriffsszenario (Information Disclosure):** Ohne strikte Richtlinie sendet der Browser bei jedem externen Link-Klick die komplette vorherige URL (inklusive interner Pfade, IDs oder Token-Fragmente) an fremde Server. Angreifer können so über ihre Server-Logfiles sensible URLs und Zugangslinks von Besuchern einsehen."
+                        )
                     }
 
                     issues = []
                     successes = []
 
-                    for header, (name, desc) in checks.items():
+                    for header, (name, desc, attack_vector) in checks.items():
                         if header not in headers:
-                            issues.append(f"⚠️ **{name} fehlt:** {desc}")
+                            issues.append(f"### ⚠️ {name} fehlt\n* **Schutz:** {desc}\n* {attack_vector}\n---")
                         else:
                             successes.append(f"✅ **{name} vorhanden:** Schutz aktiv ({desc})")
 
-                    st.markdown("### 📊 Analyseergebnisse:")
+                    st.markdown("### 📊 Analyseergebnisse & Angriffsvektoren:")
                     
-                    for success in successes:
-                        st.markdown(success)
-                    for issue in issues:
-                        st.markdown(issue)
+                    if successes:
+                        st.markdown("#### Gesicherte Bereiche:")
+                        for success in successes:
+                            st.markdown(success)
+                    
+                    if issues:
+                        st.markdown("#### 🚨 Gefundene Schwachstellen & potenzielle Einfallstore:")
+                        for issue in issues:
+                            st.markdown(issue)
                             
                 except Exception as e:
                     st.error(f"Fehler bei der Verbindung zum Ziel: {e}")
