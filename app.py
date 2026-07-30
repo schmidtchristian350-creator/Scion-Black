@@ -1,67 +1,65 @@
 import requests
 import streamlit as st
 
-# Konfiguration der Seite im Dark / Hacker Look
+# Konfiguration der Seite im edlen Dark-Mode (Anthrazit & Blau)
 st.set_page_config(
-    page_title="SCION-BLACK // SECURITY EXPLOIT & HEADER AUDIT", 
-    page_icon="⚡", 
+    page_title="Scion-Black // Security Audit", 
+    page_icon="🛡️", 
     layout="wide"
 )
 
-# --- CSS FÜR SCHWARZES, GEFÄHRLICHES DESIGN ---
+# --- CSS FÜR SAUBERES, DUNKLES ANTHRAZIT-DESIGN ---
 st.markdown("""
     <style>
-    /* Globaler Dark Mode Hintergrund und Text */
+    /* Globaler Dark Mode mit edlem Anthrazit-Hintergrund */
     .stApp {
-        background-color: #08090a;
-        color: #e0e0e0;
-        font-family: 'Courier New', Courier, monospace;
+        background-color: #121619;
+        color: #d1d5db;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Überschriften mit leichtem Neon/Gefahr-Touch */
+    /* Klare, saubere Überschriften in hellem Grau/Weiß */
     h1, h2, h3 {
-        color: #ff3333 !important;
-        font-family: 'Courier New', Courier, monospace;
-        letter-spacing: 1px;
+        color: #f3f4f6 !important;
+        font-weight: 600;
+        letter-spacing: -0.5px;
     }
 
-    /* Input-Felder im Terminal-Stil */
+    /* Input-Felder dezent und modern */
     .stTextInput input {
-        background-color: #121417 !important;
-        color: #00ffcc !important;
-        border: 1px solid #ff3333 !important;
-        border-radius: 4px;
+        background-color: #1b2227 !important;
+        color: #f3f4f6 !important;
+        border: 1px solid #2f3e46 !important;
+        border-radius: 6px;
     }
 
-    /* Buttons mit aggressivem Rot/Schwarz-Look */
+    /* Buttons im sauberen Tech-Blau / Dark Style */
     .stButton button {
-        background-color: #1a0000 !important;
-        color: #ff3333 !important;
-        border: 1px solid #ff3333 !important;
-        border-radius: 4px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.3s ease;
+        background-color: #1f2937 !important;
+        color: #f3f4f6 !important;
+        border: 1px solid #374151 !important;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
     }
     
     .stButton button:hover {
-        background-color: #ff3333 !important;
-        color: #000000 !important;
-        border: 1px solid #ff0000 !important;
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        border: 1px solid #2563eb !important;
     }
 
-    /* Sidebar / Login Bereich anpassen */
+    /* Sidebar / Login Bereich */
     [data-testid="stSidebar"] {
-        background-color: #0d0f12;
-        border-right: 1px solid #ff3333;
+        background-color: #181f24;
+        border-right: 1px solid #273038;
     }
 
-    /* Infoboxen und Warnungen */
+    /* Infoboxen und Warnungen harmonisch eingefügt */
     .stAlert {
-        background-color: #121417 !important;
-        color: #e0e0e0 !important;
-        border: 1px solid #333 !important;
+        background-color: #1b2227 !important;
+        color: #d1d5db !important;
+        border: 1px solid #2f3e46 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -73,68 +71,67 @@ if "logged_in" not in st.session_state:
 # --- SEITENBAR FÜR LOGIN (Links, verschwindet nach erfolgreichem Login) ---
 if not st.session_state["logged_in"]:
     with st.sidebar:
-        st.markdown("### ⚡ SYSTEM ACCESS")
-        st.markdown("<p style='color: #ff3333; font-size: 12px;'>RESTRICTED AREA // ADMINS ONLY</p>", unsafe_allow_html=True)
+        st.markdown("### 🔐 System-Login")
+        st.markdown("<p style='color: #9ca3af; font-size: 13px;'>Geschützter Administrationsbereich</p>", unsafe_allow_html=True)
         
         with st.form("login_form"):
-            username_input = st.text_input("IDENT / USER")
-            password_input = st.text_input("PASSCODE", type="password")
-            submit_button = st.form_submit_button("INITIALISIEREN")
+            username_input = st.text_input("Benutzername")
+            password_input = st.text_input("Passwort", type="password")
+            submit_button = st.form_submit_button("Anmelden")
             
             if submit_button:
                 if username_input == "admin" and password_input == "scion2026":
                     st.session_state["logged_in"] = True
                     st.rerun()
                 else:
-                    st.error("ACCESS DENIED // Falsche Credentials")
+                    st.error("Zugriff verweigert: Ungültige Anmeldedaten.")
 
     # Hauptbereich für nicht eingeloggte Nutzer
-    st.title("⚡ SCION-BLACK // SECURITY CORE")
-    st.markdown("### Offensive Vulnerability & Threat Intelligence")
+    st.title("🛡️ Scion-Black Security Dashboard")
+    st.markdown("### Professionelle Webseiten- und Header-Analyse")
     st.markdown("---")
-    st.warning("⚠️ **WARNUNG:** Dieses System führt automatisierte Sicherheitsanalysen durch. Unautorisiertes Scannen fremder Infrastrukturen ist strafbar. Bitte authentifiziere dich über das Terminal links.")
+    st.info("ℹ️ **Hinweis:** Dieses Tool dient der strukturierten Sicherheitsüberprüfung von Webanwendungen. Bitte melden Sie sich über die linke Seitenleiste an, um fortzufahren.")
     
     st.code("""
-[INFO] Initialisiere Kern-Protokolle...
-[INFO] Status: Warten auf Authentifizierung...
-[TARGET] Keine Ziele geladen.
+[Status] System bereit.
+[Status] Warte auf Administrator-Authentifizierung...
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: VOLLSCREEN DARK OPS MODUS ---
+    # --- EINGELOGGT: SAUBERES ANTHRAZIT DASHBOARD ---
     with st.sidebar:
-        st.markdown("### ⚡ OPERATIONAL")
-        st.markdown("Status: **ONLINE**")
-        st.markdown("Agent: **ADMIN**")
+        st.markdown("### ⚙️ Steuerung")
+        st.markdown("Status: **Aktiv**")
+        st.markdown("Rolle: **Administrator**")
         st.markdown("---")
-        if st.button("ABMELDEN // LOCK"):
+        if st.button("Abmelden"):
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("⚡ SCION-BLACK // TARGET AUDIT ENGINE")
-    st.markdown("<p style='color: #ff3333;'>SYSTEM ACTIVE // GEFAHRENANALYSE BEREIT</p>", unsafe_allow_html=True)
+    st.title("🛡️ Scion-Black Audit-Engine")
+    st.markdown("Überprüfung von Sicherheits-Headern zur Optimierung der Web-Infrastruktur.")
     st.markdown("---")
 
     # Ziel-URL eingeben
-    target_url = st.text_input("ZIEL-ADRESSE (URL eingeben inkl. https://):", "https://example.com")
+    target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
-    if st.button("SCAN STARTEN // ANALYSIERE ZIEL"):
+    if st.button("Analyse starten"):
         if not target_url.startswith("http"):
-            st.error("FEHLER: Ungültiges Protokoll. URL muss mit http:// oder https:// beginnen.")
+            st.error("Bitte eine gültige URL angeben, die mit http:// oder https:// beginnt.")
         else:
-            with st.spinner("⚡ Scanne Ziel-Infrastruktur nach Schwachstellen..."):
+            with st.spinner("Analysiere Ziel-Infrastruktur..."):
                 try:
                     response = requests.get(target_url, timeout=5)
                     headers = response.headers
                     
-                    st.success(f"VERBINDUNG ERFOLGREICH // Status-Code: {response.status_code}")
+                    st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
                     
                     checks = {
-                        "Strict-Transport-Security": ("HSTS-Header", "Erzwingt unverschlüsselte Downgrades. Angreifer können Daten abfangen."),
-                        "X-Content-Type-Options": ("X-Content-Type-Options", "MIME-Sniffing aktiv. Browser könnten manipulierte Dateien ausführen."),
-                        "X-Frame-Options": ("X-Frame-Options", "Clickjacking-Risiko. Die Seite kann in fremde Webseiten eingebettet werden."),
-                        "Content-Security-Policy": ("Content-Security-Policy (CSP)", "Fehlender Schutz gegen Cross-Site Scripting (XSS) Injektionen."),
-                        "Referrer-Policy": ("Referrer-Policy", "Sensible Datenlecks über HTTP-Referrer-Header möglich.")
+                        "Strict-Transport-Security": ("HSTS-Header", "Erzwingt verschlüsselte HTTPS-Verbindungen."),
+                        "X-Content-Type-Options": ("X-Content-Type-Options", "Verhindert MIME-Sniffing von Dateitypen."),
+                        "X-Frame-Options": ("X-Frame-Options", "Schützt vor Clickjacking (Einbetten in fremde Iframes)."),
+                        "Content-Security-Policy": ("Content-Security-Policy (CSP)", "Schützt vor Cross-Site Scripting (XSS)-Angriffen."),
+                        "Referrer-Policy": ("Referrer-Policy", "Kontrolliert die Weitergabe von URL-Informationen.")
                     }
 
                     issues = []
@@ -142,11 +139,11 @@ else:
 
                     for header, (name, desc) in checks.items():
                         if header not in headers:
-                            issues.append(f"🔴 **SCHWACHSTELLE DETEKTIERT [{name}]:** {desc}")
+                            issues.append(f"⚠️ **{name} fehlt:** {desc}")
                         else:
-                            successes.append(f"🟢 **GESICHERT [{name}]:** Abwehr aktiv. ({desc})")
+                            successes.append(f"✅ **{name} vorhanden:** Schutz aktiv ({desc})")
 
-                    st.markdown("### 📊 ANALYSE-ERGEBNISSE:")
+                    st.markdown("### 📊 Analyseergebnisse:")
                     
                     for success in successes:
                         st.markdown(success)
@@ -154,4 +151,4 @@ else:
                         st.markdown(issue)
                             
                 except Exception as e:
-                    st.error(f"FATALER FEHLER: Verbindung zum Ziel fehlgeschlagen -> {e}")
+                    st.error(f"Fehler bei der Verbindung zum Ziel: {e}")
