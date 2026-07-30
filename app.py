@@ -77,16 +77,17 @@ def generate_report_file(target, results_text):
 =============================================
 Ziel-URL: {target}
 
-FREigegebene ANALYSERGEBNISSE:
+FREIGEGABENE ANALYSERGEBNISSE (4 BAUSTEINE):
 {results_text}
 """
     with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
     return filename
 
-# --- MULTI-AGENTEN SCHRITTE MIT ERKLÄRUNG & FREIGABE ---
+# --- DIE 4 MULTI-AGENTEN BAUSTEINE MIT ERKLÄRUNG & FREIGABE ---
 
 def execute_recon_step(target_url):
+    """Baustein 1: Netzwerk- & DNS-Aufklärung"""
     log = []
     log.append("🤖 **[Recon-Agent]** Führe DNS- und IP-Enumeration aus...")
     try:
@@ -99,6 +100,7 @@ def execute_recon_step(target_url):
     return log
 
 def execute_vulnerability_step(target_url):
+    """Baustein 2: Schwachstellen-Analyse & Header-Check"""
     log = []
     log.append("🤖 **[Vulnerability-Agent]** Prüfe HTTP-Header und Angriffsvektoren...")
     try:
@@ -118,6 +120,7 @@ def execute_vulnerability_step(target_url):
     return log
 
 def execute_surface_step(target_url):
+    """Baustein 3: Oberflächen- und Struktur-Scan"""
     log = []
     log.append("🤖 **[Surface-Agent]** Analysiere Webseiten-Struktur auf Einstiegspunkte...")
     try:
@@ -128,6 +131,31 @@ def execute_surface_step(target_url):
             log.append("✅ **[Surface-Agent]** Keine kritischen Formulare auf der Einstiegsseite.")
     except Exception as e:
         log.append(f"ℹ️ **[Surface-Agent]** Hinweis: {e}")
+    return log
+
+def execute_config_step(target_url):
+    """Baustein 4: Tiefgehender Konfigurations- & Cookie-Audit"""
+    log = []
+    log.append("🤖 **[Config-Agent]** Führe tiefgehenden Cookie- und Sicherheitskonfigurations-Audit durch...")
+    try:
+        response = requests.get(target_url, timeout=5)
+        cookie_count = 0
+        for header_name, header_val in response.headers.items():
+            if "set-cookie" in header_name.lower():
+                cookie_count += 1
+                log.append(f"🍪 **[Config-Agent]** Gefundener Cookie-Header: `{header_name}: {header_val}`")
+        if cookie_count == 0:
+            log.append("✅ **[Config-Agent]** Keine ungesicherten Set-Cookie Header in der Standardantwort entdeckt.")
+        
+        # Sicherheits-Header Prüfung
+        security_headers = ["Strict-Transport-Security", "Content-Security-Policy", "X-Frame-Options"]
+        missing_headers = [h for h in security_headers if h.lower() not in [k.lower() for k in response.headers.keys()]]
+        if missing_headers:
+            log.append(f"⚠️ **[Config-Agent]** Fehlende Best-Practice Header: {', '.join(missing_headers)}")
+        else:
+            log.append("✅ **[Config-Agent]** Wichtige Sicherheits-Header sind vorhanden.")
+    except Exception as e:
+        log.append(f"❌ **[Config-Agent] Fehler:** {e}")
     return log
 
 
@@ -192,7 +220,7 @@ else:
             st.rerun()
 
     st.title("🛡️ Scion-Black // Human-in-the-Loop A2A")
-    st.markdown("Kontrollierte, interaktive Webseiten-Analyse mit manueller Freigabe für jeden Schritt.")
+    st.markdown("Kontrollierte, interaktive Webseiten-Analyse mit manueller Freigabe für alle 4 Analyse-Bausteine.")
     st.markdown("---")
 
     modem = st.radio("Wähle den Betriebsmodus:", [
@@ -203,32 +231,39 @@ else:
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
-    # Wenn der Systemangriff-Modus gewählt ist, fragen wir vorab nach den Freigaben (Human-in-the-Loop)
+    # Wenn der Modus gewählt ist, zeigen wir die 4 Bausteine zur Freigabe an
     if modem == "⚡ Systemangriff (Human-in-the-Loop A2A)":
         st.markdown("---")
-        st.markdown("### 🛡️ **Sicherheits- & Freigabekonsole (Human-in-the-Loop)**")
-        st.markdown("Bitte prüfe die folgenden geplanten Aktionen und erteile die notwendigen Freigaben:")
+        st.markdown("### 🛡️ **Sicherheits- & Freigabekonsole (4-Bausteine Workflow)**")
+        st.markdown("Bitte prüfe die folgenden georeihten Aktionen und erteile die notwendigen Freigaben:")
 
-        with st.expander("🔍 **Schritt 1: Netzwerk- & DNS-Aufklärung (Recon-Agent)**", expanded=True):
+        with st.expander("🔍 **Baustein 1: Netzwerk- & DNS-Aufklärung (Recon-Agent)**", expanded=True):
             st.markdown("""
             * **Erklärung:** Der Agent fragt die DNS-Server ab, um die echten IP-Adressen hinter der Ziel-URL herauszufinden.
-            * **Auswirkungen:** Es wird passiv/aktiv Netzwerkverkehr zum Domain-Name-Server erzeugt. Das Ziel merkt davon in der Regel nichts, aber es ist der erste Schritt zur Identifikation der Infrastruktur.
+            * **Auswirkungen:** Es wird passiver/aktiver Netzwerkverkehr zum Domain-Name-Server erzeugt. Identifiziert die zugrundeliegende Infrastruktur.
             """)
-            approve_step1 = st.checkbox("Schritt 1 freigeben und ausführen", value=True)
+            approve_step1 = st.checkbox("Baustein 1 freigeben und ausführen", value=True)
 
-        with st.expander("⚠️ **Schritt 2: Schwachstellen-Analyse (Vulnerability-Agent)**", expanded=True):
+        with st.expander("⚠️ **Baustein 2: Schwachstellen-Analyse (Vulnerability-Agent)**", expanded=True):
             st.markdown("""
-            * **Erklärung:** Der Agent verbindet sich direkt per HTTP mit der Zielseite und prüft Sicherheits-Header, Cookies und bekannte Einstiegspunkte.
-            * **Auswirkungen:** Es werden Standard-Anfragen an den Webserver gesendet. Dies taucht in den normalen Logdateien des Zielservers auf. Es werden keine schädlichen Payloads oder Hacks ausgeführt.
+            * **Erklärung:** Der Agent verbindet sich direkt per HTTP mit der Zielseite und prüft Sicherheits-Header und potenzielle Vektoren.
+            * **Auswirkungen:** Standard-HTTP-Anfragen werden an den Webserver gesendet und in den Logdateien des Ziels registriert. Keine schädlichen Payloads.
             """)
-            approve_step2 = st.checkbox("Schritt 2 freigeben und ausführen", value=True)
+            approve_step2 = st.checkbox("Baustein 2 freigeben und ausführen", value=True)
 
-        with st.expander("🖥️ **Schritt 3: Oberflächen- und Struktur-Scan (Surface-Agent)**", expanded=True):
+        with st.expander("🖥️ **Baustein 3: Oberflächen- und Struktur-Scan (Surface-Agent)**", expanded=True):
             st.markdown("""
             * **Erklärung:** Der Agent durchsucht den HTML-Quelltext nach Formularen, Eingabefeldern oder Login-Masken.
-            * **Auswirkungen:** Identifiziert potenzielle Schnittstellen, die für automatisierte Eingabetests anfällig sein könnten. Keine Modifikation am Ziel.
+            * **Auswirkungen:** Identifiziert Schnittstellen auf der Startseite ohne Modifikation des Zielsystems.
             """)
-            approve_step3 = st.checkbox("Schritt 3 freigeben und ausführen", value=True)
+            approve_step3 = st.checkbox("Baustein 3 freigeben und ausführen", value=True)
+
+        with st.expander("🍪 **Baustein 4: Tiefgehender Konfigurations- & Cookie-Audit (Config-Agent)**", expanded=True):
+            st.markdown("""
+            * **Erklärung:** Der Agent analysiert ausgehende Cookie-Setzungen und prüft das Vorhandensein essenzieller Sicherheits-Header (HSTS, CSP etc.).
+            * **Auswirkungen:** Liefert präzise Einblicke in die clientseitigen Schutzmechanismen des Servers.
+            """)
+            approve_step4 = st.checkbox("Baustein 4 freigeben und ausführen", value=True)
         st.markdown("---")
 
     if st.button("Analyse & Freigabe-Prozess starten"):
@@ -260,8 +295,8 @@ else:
                         report_summary = f"KI-Agent Analyse via HTTP-Requests durchgeführt. Status: {response.status_code}"
 
                     else:
-                        # --- HUMAN-IN-THE-LOOP AUSFÜHRUNG ---
-                        st.markdown("🔴 **[A2A MASTER] Starte kontrollierte Ausführung nach menschlicher Freigabe...**")
+                        # --- HUMAN-IN-THE-LOOP AUSFÜHRUNG DER 4 BAUSTEINE ---
+                        st.markdown("🔴 **[A2A MASTER] Starte kontrollierte Ausführung der 4 Bausteine nach menschlicher Freigabe...**")
                         agent_logs = []
 
                         if approve_step1:
@@ -271,7 +306,7 @@ else:
                                 st.markdown(l)
                                 agent_logs.append(l)
                         else:
-                            st.info("ℹ️ Schritt 1 (Recon) wurde vom Benutzer übersprungen.")
+                            st.info("ℹ️ Baustein 1 (Recon) wurde vom Benutzer übersprungen.")
 
                         if approve_step2:
                             st.markdown("---")
@@ -280,7 +315,7 @@ else:
                                 st.markdown(l)
                                 agent_logs.append(l)
                         else:
-                            st.info("ℹ️ Schritt 2 (Vulnerability) wurde vom Benutzer übersprungen.")
+                            st.info("ℹ️ Baustein 2 (Vulnerability) wurde vom Benutzer übersprungen.")
 
                         if approve_step3:
                             st.markdown("---")
@@ -289,9 +324,18 @@ else:
                                 st.markdown(l)
                                 agent_logs.append(l)
                         else:
-                            st.info("ℹ️ Schritt 3 (Surface) wurde vom Benutzer übersprungen.")
+                            st.info("ℹ️ Baustein 3 (Surface) wurde vom Benutzer übersprungen.")
 
-                        st.success("🏁 **Human-in-the-Loop Simulation erfolgreich abgeschlossen.**")
+                        if approve_step4:
+                            st.markdown("---")
+                            logs_4 = execute_config_step(target_url)
+                            for l in logs_4:
+                                st.markdown(l)
+                                agent_logs.append(l)
+                        else:
+                            st.info("ℹ️ Baustein 4 (Config) wurde vom Benutzer übersprungen.")
+
+                        st.success("🏁 **Human-in-the-Loop Simulation der 4 Bausteine erfolgreich abgeschlossen.**")
                         report_summary = "\n".join(agent_logs)
 
                     # Report Download Button anbieten
