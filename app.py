@@ -1,6 +1,5 @@
 import requests
 import streamlit as st
-# Hinweis für den Agenten: Importiere Playwright für die Browser-Automatisierung & Logins
 from playwright.sync_api import sync_playwright
 
 # Konfiguration der Seite im edlen Dark-Mode
@@ -106,7 +105,7 @@ else:
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
-    # Wenn der KI-Agent Modus gewählt ist, zeigen wir zusätzliche Felder für den Login auf der Zielseite
+    # Wenn der KI-Agent Modus gewählt ist, zeigen wir zusätzliche Felder für den Login
     agent_user = ""
     agent_pass = ""
     if "KI-Agent" in modem:
@@ -128,8 +127,6 @@ else:
                         response = requests.get(target_url, timeout=5)
                         headers = response.headers
                         st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
-                        
-                        # (Hier greifen die bekannten Header-Checks...)
                         st.info("Nutze den KI-Agenten-Modus, um automatisierte Login-Prozesse und Tiefenprüfungen durchzuführen.")
                         
                     else:
@@ -137,40 +134,34 @@ else:
                         st.markdown("🤖 **KI-Agent übernimmt die Kontrolle...**")
                         
                         with sync_playwright() as p:
-                            # Startet einen unsichtbaren Browser (Headless)
                             browser = p.chromium.launch(headless=True)
                             page = browser.new_page()
                             
                             st.write(f"🌐 Navigiere zu: `{target_url}`")
                             page.goto(target_url, timeout=10000)
                             
-                            # Wenn Zugangsdaten angegeben wurden, versucht der Agent sich einzuloggen
                             if agent_user and agent_pass:
                                 st.write("🔑 Suche nach Login-Formularen und versuche automatische Anmeldung...")
-                               try:
-                                    # Versucht gängige Input-Felder für User/Passwort zu finden und auszufüllen
+                                try:
                                     page.fill("input[type='email'], input[name*='user'], input[id*='user']", agent_user, timeout=3000)
                                     page.fill("input[type='password'], input[name*='pass'], input[id*='pass']", agent_pass, timeout=3000)
-                                    # Klickt auf den Login-Button
                                     page.click("button[type='submit'], input[type='submit'], button:has-text('Login'), button:has-text('Anmelden')", timeout=3000)
-                                    page.wait_for_load_timeout(3000) # Kurz warten bis Seite lädt
+                                    page.wait_for_load_timeout(3000)
                                     st.success("✅ Agent hat versucht, die Anmeldedaten zu übermitteln.")
                                 except Exception as login_err:
                                     st.warning(f"⚠️ Konnte kein standardisiertes Login-Formular automatisch bedienen: {login_err}")
 
-                            # Nach dem (versuchten) Login macht der Agent einen Screenshot und prüft den Zustand
                             screenshot_path = "agent_view.png"
                             page.screenshot(path=screenshot_path)
                             st.image(screenshot_path, caption="Live-Ansicht des KI-Agenten nach Interaktion")
                             
-                            # Sicherheitsanalyse der aktuellen Seite nach dem Login
                             cookies = page.context.cookies()
                             st.markdown(f"🍪 **Gefundene Session-Cookies nach Login:** {len(cookies)} Stück")
                             
                             for cookie in cookies:
                                 secure_flag = "🔒 Sicher" if cookie.get("secure") else "⚠️ Unsicher (Kein Secure-Flag)"
                                 http_only = "🛡️ HttpOnly" if cookie.get("httpOnly") else "⚠️ JavaScript-lesbar (XSS-Gefahr)"
-                                st.write(- Cookie: `{cookie['name']}` | {secure_flag} | {http_only})
+                                st.write(f"- Cookie: `{cookie['name']}` | {secure_flag} | {http_only}")
 
                             browser.close()
                             st.success("🏁 KI-Agent hat den Audit erfolgreich abgeschlossen.")
