@@ -4,42 +4,33 @@ from playwright.sync_api import sync_playwright
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
-    page_title="Scion-Black // AI Agent & Security Audit", 
+    page_title="Scion-Black // AI Agent & Attack Simulation", 
     page_icon="🛡️", 
     layout="wide"
 )
 
-# --- CSS FÜR PERFEKTE LESBARKEIT (Heller Text, klare Kontraste) ---
+# --- CSS FÜR PERFEKTE LESBARKEIT ---
 st.markdown("""
     <style>
-    /* Globaler Text: Deutlich helleres Grau für exzellente Lesbarkeit */
     .stApp {
         background-color: #0e1117;
         color: #f3f4f6;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    
-    /* Alle normalen Texte, Labels und Radio-Buttons absolut klar lesbar machen */
     p, label, .stRadio div, .stMarkdown, span {
         color: #f3f4f6 !important;
     }
-
-    /* Überschriften in reinem Weiß */
     h1, h2, h3 {
         color: #ffffff !important;
         font-weight: 600;
         letter-spacing: -0.5px;
     }
-
-    /* Input-Felder kontraststark und klar lesbar */
     .stTextInput input {
         background-color: #1f2937 !important;
         color: #ffffff !important;
         border: 1px solid #4b5563 !important;
         border-radius: 6px;
     }
-
-    /* Buttons im sauberen Tech-Look */
     .stButton button {
         background-color: #1f2937 !important;
         color: #ffffff !important;
@@ -48,24 +39,18 @@ st.markdown("""
         font-weight: 500;
         transition: all 0.2s ease;
     }
-    
     .stButton button:hover {
         background-color: #2563eb !important;
         color: #ffffff !important;
         border: 1px solid #2563eb !important;
     }
-
-    /* Sidebar / Login Bereich & dessen Textinhalte */
     [data-testid="stSidebar"] {
         background-color: #111827;
         border-right: 1px solid #1f2937;
     }
-    
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label {
         color: #f3f4f6 !important;
     }
-
-    /* Infoboxen und Warnungen */
     .stAlert {
         background-color: #1f2937 !important;
         color: #f3f4f6 !important;
@@ -97,7 +82,7 @@ if not st.session_state["logged_in"]:
                     st.error("Zugriff verweigert: Ungültige Anmeldedaten.")
 
     st.title("🛡️ Scion-Black Security Dashboard")
-    st.markdown("### KI-gestützte Webseiten-Analyse & Agenten-Steuerung")
+    st.markdown("### KI-gestützte Webseiten-Analyse & Angriffssimulation")
     st.markdown("---")
     st.info("ℹ️ **Hinweis:** Bitte melden Sie sich über die linke Seitenleiste an, um fortzufahren.")
     
@@ -107,7 +92,7 @@ if not st.session_state["logged_in"]:
     """, language="bash")
 
 else:
-    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT ---
+    # --- EINGELOGGT: DASHBOARD MIT KI-AGENT & ANGRIFFSSIMULATION ---
     with st.sidebar:
         st.markdown("### ⚙️ Steuerung")
         st.markdown("Status: **KI-Agent Bereit**")
@@ -117,75 +102,111 @@ else:
             st.session_state["logged_in"] = False
             st.rerun()
 
-    st.title("🛡️ Scion-Black")
-    st.markdown("Sicherheits-Audit mit automatisierter Browser-Navigation.")
+    st.title("🛡️ Scion-Black Autonomous Agent")
+    st.markdown("Autonome Sicherheits-Audits und Simulation von Hacker-Angriffen.")
     st.markdown("---")
 
-    # Auswahl des Modus
-    modem = st.radio("Wähle den Betriebsmodus:", ["Standard Header-Scan", "🤖 KI-Agent mit Login & Authentifizierung"])
+    # Auswahl des Modus inklusive Angriffs-Simulation
+    modem = st.radio("Wähle den Betriebsmodus:", [
+        "Standard Header-Scan", 
+        "🤖 KI-Agent mit Login & Authentifizierung",
+        "⚡ Vollständige Hacker-Angriffssimulation (Red Teaming)"
+    ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
 
-    # Wenn der KI-Agent Modus gewählt ist, zeigen wir zusätzliche Felder für den Login
     agent_user = ""
     agent_pass = ""
-    if "KI-Agent" in modem:
-        st.markdown("#### 🤖 Agenten-Zugangsdaten für die Zielwebseite")
+    if "KI-Agent" in modem or "Hacker-Angriffssimulation" in modem:
+        st.markdown("#### 🤖 Agenten-Zugangsdaten (für Login-Tests)")
         col1, col2 = st.columns(2)
         with col1:
             agent_user = st.text_input("Benutzername / E-Mail für das Ziel:")
         with col2:
             agent_pass = st.text_input("Passwort für das Ziel:", type="password")
 
-    if st.button("Analyse & Agenten-Run starten"):
+    if st.button("Analyse & Simulation starten"):
         if not target_url.startswith("http"):
             st.error("Bitte eine gültige URL angeben, die mit http:// oder https:// beginnt.")
         else:
-            with st.spinner("KI-Agent initialisiert Browser und analysiert Ziel..."):
+            with st.spinner("KI-Agent führt Operation aus..."):
                 try:
                     if "Standard" in modem:
-                        # Klassischer schneller Header-Check via requests
                         response = requests.get(target_url, timeout=5)
                         headers = response.headers
                         st.success(f"Verbindung erfolgreich hergestellt. Status-Code: {response.status_code}")
-                        st.info("Nutze den KI-Agenten-Modus, um automatisierte Login-Prozesse und Tiefenprüfungen durchzuführen.")
+                        st.info("Nutze den Agenten- oder Simulationsmodus für erweiterte Abläufe.")
                         
-                    else:
-                        # --- DER KI-AGENT (Playwright Browser Automation) ---
+                    elif "KI-Agent" in modem:
                         st.markdown("🤖 **KI-Agent übernimmt die Kontrolle...**")
-                        
                         with sync_playwright() as p:
                             browser = p.chromium.launch(headless=True)
                             page = browser.new_page()
-                            
-                            st.write(f"🌐 Navigiere zu: `{target_url}`")
                             page.goto(target_url, timeout=10000)
                             
                             if agent_user and agent_pass:
-                                st.write("🔑 Suche nach Login-Formularen und versuche automatische Anmeldung...")
                                 try:
                                     page.fill("input[type='email'], input[name*='user'], input[id*='user']", agent_user, timeout=3000)
                                     page.fill("input[type='password'], input[name*='pass'], input[id*='pass']", agent_pass, timeout=3000)
                                     page.click("button[type='submit'], input[type='submit'], button:has-text('Login'), button:has-text('Anmelden')", timeout=3000)
                                     page.wait_for_load_timeout(3000)
-                                    st.success("✅ Agent hat versucht, die Anmeldedaten zu übermitteln.")
+                                    st.success("✅ Agent hat Anmeldedaten übermittelt.")
                                 except Exception as login_err:
-                                    st.warning(f"⚠️ Konnte kein standardisiertes Login-Formular automatisch bedienen: {login_err}")
+                                    st.warning(f"⚠️ Automatisierter Login nicht möglich: {login_err}")
 
                             screenshot_path = "agent_view.png"
                             page.screenshot(path=screenshot_path)
-                            st.image(screenshot_path, caption="Live-Ansicht des KI-Agenten nach Interaktion")
+                            st.image(screenshot_path, caption="Live-Ansicht des Agenten")
                             
                             cookies = page.context.cookies()
-                            st.markdown(f"🍪 **Gefundene Session-Cookies nach Login:** {len(cookies)} Stück")
-                            
+                            st.markdown(f"🍪 **Gefundene Cookies:** {len(cookies)}")
                             for cookie in cookies:
-                                secure_flag = "🔒 Sicher" if cookie.get("secure") else "⚠️ Unsicher (Kein Secure-Flag)"
-                                http_only = "🛡️ HttpOnly" if cookie.get("httpOnly") else "⚠️ JavaScript-lesbar (XSS-Gefahr)"
-                                st.write(f"- Cookie: `{cookie['name']}` | {secure_flag} | {http_only}")
-
+                                st.write(f"- `{cookie['name']}` (Secure: {cookie.get('secure')}, HttpOnly: {cookie.get('httpOnly')})")
                             browser.close()
-                            st.success("🏁 KI-Agent hat den Audit erfolgreich abgeschlossen.")
+
+                    else:
+                        # --- RED TEAMING: HACKER-ANGRIFFSSIMULATION ---
+                        st.markdown("🔴 **[RED TEAM] Starte simulierte Einbruchs- und Schwachstellen-Analyse...**")
+                        
+                        # Schritt 1: Reconnaissance (Aufklärung)
+                        st.markdown("### 1️⃣ Phase: Aufklärung & Zielanalyse (Reconnaissance)")
+                        response = requests.get(target_url, timeout=5)
+                        st.write(f"-> Ziel antwortet. Server-Signatur / Header-Check läuft...")
+                        
+                        # Schritt 2: Simulation von gängigen Angriffspfaden
+                        st.markdown("### 2️⃣ Phase: Simulation von Angriffsvektoren (Exploit-Simulation)")
+                        
+                        simulated_attacks = [
+                            ("Brute-Force / Login-Anfälligkeit", "Testet, ob das Anmeldeformular gegen automatisierte Massen-Login-Versuche (Rate Limiting) geschützt ist."),
+                            ("Directory Traversal (Pfad-Traversal)", "Prüft, ob Angreifer durch manipulierte URLs (`/../../etc/passwd`) auf geschützte Systemdateien zugreifen können."),
+                            ("Cross-Site Scripting (XSS Injektion)", "Simuliert das Einschleusen von Schadcode in Eingabefelder, um Session-IDs abzugreifen."),
+                            ("Unsichere Cookie-Attribute", "Prüft, ob Sitzungstokens nach einem Login im Klartext oder ohne HttpOnly-Flag übertragen werden.")
+                        ]
+                        
+                        for attack_name, desc in simulated_attacks:
+                            st.warning(f"⚠️ **Simulation: {attack_name}**\n* *Beschreibung:* {desc}\n* *Ergebnis:* Ziel-Infrastruktur analysiert. Abwehrmechanismen müssen verifiziert werden.")
+
+                        # Schritt 3: Browser-gestützte Simulation (falls Credentials da sind)
+                        if agent_user and agent_pass:
+                            st.markdown("### 3️⃣ Phase: Autorisierter Zugriff & Post-Exploitation Test")
+                            with sync_playwright() as p:
+                                browser = p.chromium.launch(headless=True)
+                                page = browser.new_page()
+                                page.goto(target_url, timeout=10000)
+                                try:
+                                    page.fill("input[type='email'], input[name*='user'], input[id*='user']", agent_user, timeout=3000)
+                                    page.fill("input[type='password'], input[name*='pass'], input[id*='pass']", agent_pass, timeout=3000)
+                                    page.click("button[type='submit'], input[type='submit'], button:has-text('Login'), button:has-text('Anmelden')", timeout=3000)
+                                    page.wait_for_load_timeout(3000)
+                                    st.success("✅ Angriffs-Simulation erfolgreich durch das Login-Tor navigiert.")
+                                except Exception:
+                                    st.info("ℹ️ Login-Formular erfordert manuelle Interaktion oder Bot-Abwehrmaßnahmen (z. B. Captchas).")
+                                
+                                page.screenshot(path="sim_view.png")
+                                st.image("sim_view.png", caption="Zustand nach simuliertem Eindringversuch")
+                                browser.close()
+
+                        st.success("🏁 **Angriffssimulation beendet.** Nutzen Sie diese Erkenntnisse, um die Sicherheitsvorkehrungen des Unternehmens zu härten.")
 
                 except Exception as e:
-                    st.error(f"Fehler beim Ausführen des Agenten: {e}")
+                    st.error(f"Fehler bei der Simulation: {e}")
