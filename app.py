@@ -1,12 +1,6 @@
-import os
 import subprocess
 import requests
 import streamlit as st
-
-# Für den professionellen PDF-Export
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
@@ -74,29 +68,18 @@ def check_connected_displays():
     except Exception:
         return 1
 
-# Hilfsfunktion zur PDF-Generierung
-def generate_pdf_report(target, results_text):
-    filename = "scion_black_security_report.pdf"
-    doc = SimpleDocTemplate(filename, pagesize=letter)
-    story = []
-    styles = getSampleStyleSheet()
-    
-    colors_hex = '#1f2937'
-    title_style = ParagraphStyle(
-        'ReportTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        textColor=colors_hex
-    )
-    
-    story.append(Paragraph("🛡️ Scion-Black Security Audit Report", title_style))
-    story.append(Spacer(1, 12))
-    story.append(Paragraph(f"<b>Ziel-URL:</b> {target}", styles['Normal']))
-    story.append(Spacer(1, 12))
-    story.append(Paragraph("<b>Zusammenfassung der Analyseergebnisse:</b>", styles['Heading2']))
-    story.append(Paragraph(results_text.replace('\n', '<br/>'), styles['Normal']))
-    
-    doc.build(story)
+# Hilfsfunktion zur Report-Generierung (Reines Python ohne externe Module)
+def generate_report_file(target, results_text):
+    filename = "scion_black_security_report.txt"
+    content = f"""SCION-BLACK SECURITY AUDIT REPORT
+==================================
+Ziel-URL: {target}
+
+ZUSAMMENFASSUNG DER ANALYSERGEBNISSE:
+{results_text}
+"""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
     return filename
 
 # Session State für Login
@@ -235,14 +218,14 @@ else:
                         st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
                         report_summary = "Systemangriff (Black-Box Red Teaming) erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
 
-                    # PDF Download Button anbieten
-                    pdf_file = generate_pdf_report(target_url, report_summary)
-                    with open(pdf_file, "rb") as f:
+                    # Report Download Button anbieten
+                    report_file = generate_report_file(target_url, report_summary)
+                    with open(report_file, "rb") as f:
                         st.download_button(
-                            label="📄 Sicherheits-Report als PDF herunterladen",
+                            label="📄 Sicherheits-Report als Datei herunterladen",
                             data=f,
-                            file_name="Scion_Black_Audit_Report.pdf",
-                            mime="application/pdf"
+                            file_name="Scion_Black_Audit_Report.txt",
+                            mime="text/plain"
                         )
 
                     # Gewünschte Abschlussfrage
