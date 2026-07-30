@@ -157,7 +157,7 @@ else:
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
         "🤖 KI-Agent (Seitenanalyse & Cookies)",
-        "⚡ Vollständige Hacker-Angriffssimulation (Black-Box Red Teaming)"
+        "⚡ Systemangriff (Black-Box Red Teaming)"
     ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
@@ -219,8 +219,8 @@ else:
                             report_summary = f"KI-Agent Analyse durchgeführt. Gefundene Cookies: {len(cookies)}"
 
                     else:
-                        # --- BLACK-BOX RED TEAMING MIT DNS-AUFKLÄRUNG ---
-                        st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation & DNS-Aufklärung...**")
+                        # --- SYSTEMANGRIFF MIT DNS-AUFKLÄRUNG ---
+                        st.markdown("🔴 **[RED TEAM] Starte Systemangriff & DNS-Aufklärung...**")
                         
                         try:
                             clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
@@ -263,8 +263,8 @@ else:
                             st.image(screenshot_path, caption="Sicht des externen Angreifers auf die Startseite")
                             browser.close()
 
-                        st.success("🏁 **Black-Box Simulation abgeschlossen.**")
-                        report_summary = "Black-Box Red Teaming Simulation erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
+                        st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
+                        report_summary = "Systemangriff (Black-Box Red Teaming) erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
 
                     # PDF Download Button anbieten
                     pdf_file = generate_pdf_report(target_url, report_summary)
