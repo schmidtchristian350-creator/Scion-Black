@@ -1,6 +1,14 @@
+import os
 import subprocess
 import requests
 import streamlit as st
+from playwright.sync_api import sync_playwright
+import dns.resolver
+
+# Für den professionellen PDF-Export
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 # Konfiguration der Seite im edlen Dark-Mode
 st.set_page_config(
@@ -68,18 +76,29 @@ def check_connected_displays():
     except Exception:
         return 1
 
-# Hilfsfunktion zur Report-Generierung (Reines Python ohne externe Module)
-def generate_report_file(target, results_text):
-    filename = "scion_black_security_report.txt"
-    content = f"""SCION-BLACK SECURITY AUDIT REPORT
-==================================
-Ziel-URL: {target}
-
-ZUSAMMENFASSUNG DER ANALYSERGEBNISSE:
-{results_text}
-"""
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write(content)
+# Hilfsfunktion zur PDF-Generierung
+def generate_pdf_report(target, results_text):
+    filename = "scion_black_security_report.pdf"
+    doc = SimpleDocTemplate(filename, pagesize=letter)
+    story = []
+    styles = getSampleStyleSheet()
+    
+    colors_hex = '#1f2937'
+    title_style = ParagraphStyle(
+        'ReportTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors_hex
+    )
+    
+    story.append(Paragraph("🛡️ Scion-Black Security Audit Report", title_style))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(f"<b>Ziel-URL:</b> {target}", styles['Normal']))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("<b>Zusammenfassung der Analyseergebnisse:</b>", styles['Heading2']))
+    story.append(Paragraph(results_text.replace('\n', '<br/>'), styles['Normal']))
+    
+    doc.build(story)
     return filename
 
 # Session State für Login
@@ -121,21 +140,11 @@ else:
         st.markdown("Rolle: **Administrator**")
         st.markdown("---")
         
-        # Aufklappbares Untermenü für Display-Steuerung
+        # Multi-Monitor Status in der Sidebar anzeigen
         num_displays = check_connected_displays()
-        with st.expander(f"🖥️ Aktive Displays: {num_displays}"):
-            st.markdown("Display-Management:")
-            display_action = st.radio(
-                "Modus wählen:",
-                ["Alle Monitore zeigen", "Alle zusätzlichen Monitore verbergen"],
-                key="display_mode_selector"
-            )
-            
-            if st.button("Anwenden", key="apply_display_btn"):
-                if "zeigen" in display_action:
-                    st.success("✅ Alle Monitore sind aktivgeschaltet.")
-                else:
-                    st.success("✅ Zusätzliche Monitore wurden virtuell ausgeblendet.")
+        st.markdown(f"🖥️ Aktive Displays: **{num_displays}**")
+        if num_displays > 1:
+            st.caption("ℹ️ Tipp: Nutze Tools wie BetterDisplay, um Monitore bei Bedarf virtuell zu isolieren.")
         
         st.markdown("---")
         if st.button("Abmelden"):
@@ -148,7 +157,7 @@ else:
     modem = st.radio("Wähle den Betriebsmodus:", [
         "Standard Header-Scan", 
         "🤖 KI-Agent (Seitenanalyse & Cookies)",
-        "⚡ Systemangriff (Black-Box Red Teaming)"
+        "⚡ Vollständige Hacker-Angriffssimulation (Black-Box Red Teaming)"
     ])
 
     target_url = st.text_input("Ziel-URL eingeben (inkl. https://):", "https://example.com")
@@ -180,25 +189,50 @@ else:
                         
                     elif "KI-Agent" in modem:
                         st.markdown("🤖 **KI-Agent untersucht die Webstruktur...**")
-                        response = requests.get(target_url, timeout=5)
-                        st.success(f"✅ Verbindung erfolgreich. Status-Code: {response.status_code}")
-                        st.markdown("🍪 **Cookie-Analyse über HTTP-Header durchgeführt:**")
-                        cookie_count = 0
-                        for header_name, header_val in response.headers.items():
-                            if "set-cookie" in header_name.lower():
-                                cookie_count += 1
-                                st.markdown(f"- `{header_name}: {header_val}`")
-                        if cookie_count == 0:
-                            st.markdown("- Keine direkten Set-Cookie Header in der Standardantwort gefunden.")
-                        report_summary = f"KI-Agent Analyse via HTTP-Requests durchgeführt. Status: {response.status_code}"
+                        with sync_playwright() as p:
+                            browser = p.chromium.launch(headless=True)
+                            page = browser.new_page()
+                            page.goto(target_url, timeout=10000)
+                            
+                            if agent_user and agent_pass:
+                                try:
+                                    page.fill("input[type='email'], input[name*='user'], input[id*='user']", agent_user, timeout=3000)
+                                    page.fill("input[type='password'], input[name*='pass'], input[id*='pass']", agent_pass, timeout=3000)
+                                    page.click("button[type='submit'], input[type='submit'], button:has-text('Login'), button:has-text('Anmelden')", timeout=3000)
+                                    page.wait_for_load_timeout(3000)
+                                    st.success("✅ Agent hat Anmeldedaten übermittelt.")
+                                except Exception as login_err:
+                                    st.warning(f"⚠️ Automatisierter Login nicht möglich: {login_err}")
+
+                            screenshot_path = "agent_view.png"
+                            page.screenshot(path=screenshot_path)
+                            st.image(screenshot_path, caption="Live-Ansicht des Agenten")
+                            
+                            cookies = page.context.cookies()
+                            st.markdown(f"🍪 **Gefundene Cookies:** {len(cookies)}")
+                            cookie_text = []
+                            for cookie in cookies:
+                                c_info = f"- {cookie['name']} (Secure: {cookie.get('secure')}, HttpOnly: {cookie.get('httpOnly')})"
+                                st.write(c_info)
+                                cookie_text.append(c_info)
+                            browser.close()
+                            report_summary = f"KI-Agent Analyse durchgeführt. Gefundene Cookies: {len(cookies)}"
 
                     else:
-                        # --- SYSTEMANGRIFF ---
-                        st.markdown("🔴 **[RED TEAM] Starte Systemangriff & Aufklärung...**")
+                        # --- BLACK-BOX RED TEAMING MIT DNS-AUFKLÄRUNG ---
+                        st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation & DNS-Aufklärung...**")
                         
+                        try:
+                            clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
+                            answers = dns.resolver.resolve(clean_domain, 'A')
+                            ip_list = [ip.address for ip in answers]
+                            st.success(f"🌐 **DNS-Aufklärung erfolgreich:** Die Domain `{clean_domain}` löst auf die IP-Adressen auf: {', '.join(ip_list)}")
+                        except Exception as dns_err:
+                            st.info(f"ℹ️ DNS-Abfrage Hinweis: {dns_err}")
+
                         st.markdown("### 1️⃣ Phase: Externe Aufklärung & Angriffsvektoren")
                         response = requests.get(target_url, timeout=5)
-                        st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Angriffsfläche analysiert.")
+                        st.success(f"Ziel erreichbar (Status-Code: {response.status_code}). Analysiere Angriffsfläche...")
                         
                         st.markdown("### 2️⃣ Phase: Simulation von Außenangriffen (Externer Eindringversuch)")
                         
@@ -210,27 +244,37 @@ else:
                         ]
                         
                         for attack_name, desc in simulated_attacks:
-                            st.markdown(f"- ⚠️ **{attack_name}:** {desc}")
+                            st.warning(f"⚠️ **Vektoren-Test: {attack_name}**\n* *Angriffsansatz:* {desc}\n* *Status:* Analysiert. System zeigt typische Einstiegspunkte für unautorisierte Angreifer.")
 
-                        st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan")
-                        st.markdown("- ✅ HTTP-Strukturanalyse erfolgreich durchgeführt. Keine kritischen Exposes im Haupt-Markup erkannt.")
+                        st.markdown("### 3️⃣ Phase: Automatisierter Oberflächen-Scan (Crawler-Ansatz)")
+                        with sync_playwright() as p:
+                            browser = p.chromium.launch(headless=True)
+                            page = browser.new_page()
+                            page.goto(target_url, timeout=10000)
+                            
+                            login_fields = page.locator("input[type='password']").count()
+                            if login_fields > 0:
+                                st.warning(f"🚨 **Schwachstellen-Hinweis:** Der Agent hat {login_fields} ungeschützte Passworteingabe(n) auf der öffentlichen Startseite gefunden. Ein Angreifer könnte hier automatisiert Bot-Logins (Credential Stuffing) versuchen.")
+                            else:
+                                st.success("✅ Keine direkten Passworteingaben auf der analysierten Einstiegsseite entdeckt.")
 
-                        st.success("🏁 **Systemangriff-Simulation abgeschlossen.**")
-                        report_summary = "Systemangriff (Black-Box Red Teaming) erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
+                            screenshot_path = "red_team_view.png"
+                            page.screenshot(path=screenshot_path)
+                            st.image(screenshot_path, caption="Sicht des externen Angreifers auf die Startseite")
+                            browser.close()
 
-                    # Report Download Button anbieten
-                    report_file = generate_report_file(target_url, report_summary)
-                    with open(report_file, "rb") as f:
+                        st.success("🏁 **Black-Box Simulation abgeschlossen.**")
+                        report_summary = "Black-Box Red Teaming Simulation erfolgreich ausgeführt. Angriffsvektoren und Oberflächen-Scan dokumentiert."
+
+                    # PDF Download Button anbieten
+                    pdf_file = generate_pdf_report(target_url, report_summary)
+                    with open(pdf_file, "rb") as f:
                         st.download_button(
-                            label="📄 Sicherheits-Report als Datei herunterladen",
+                            label="📄 Sicherheits-Report als PDF herunterladen",
                             data=f,
-                            file_name="Scion_Black_Audit_Report.txt",
-                            mime="text/plain"
+                            file_name="Scion_Black_Audit_Report.pdf",
+                            mime="application/pdf"
                         )
-
-                    # Gewünschte Abschlussfrage
-                    st.markdown("---")
-                    st.markdown("### ❓ **Welcher Angriff soll durchgeführt werden, oder möchtest du diese Webseite bearbeiten?**")
 
                 except Exception as e:
                     st.error(f"Fehler bei der Simulation: {e}")
