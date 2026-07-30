@@ -66,18 +66,19 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Hilfsfunktion zur PDF-Generierung
+# Hilfsfunktion zur PDF-Generierung (Korrigiert)
 def generate_pdf_report(target, results_text):
     filename = "scion_black_security_report.pdf"
     doc = SimpleDocTemplate(filename, pagesize=letter)
     story = []
     styles = getSampleStyleSheet()
     
+    colors_hex = '#1f2937'
     title_style = ParagraphStyle(
         'ReportTitle',
         parent=styles['Heading1'],
         fontSize=18,
-        textColor=colors_hex := '#1f2937'
+        textColor=colors_hex
     )
     
     story.append(Paragraph("🛡️ Scion-Black Security Audit Report", title_style))
@@ -205,7 +206,6 @@ else:
                         # --- BLACK-BOX RED TEAMING MIT DNS-AUFKLÄRUNG ---
                         st.markdown("🔴 **[RED TEAM] Starte Black-Box Angriffssimulation & DNS-Aufklärung...**")
                         
-                        # Zusatz-Tool: DNS Auflösung
                         try:
                             clean_domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
                             answers = dns.resolver.resolve(clean_domain, 'A')
