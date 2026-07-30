@@ -1,4 +1,3 @@
-requests
 streamlit
+requests
 reportlab
-dnspython
